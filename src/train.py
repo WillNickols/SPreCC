@@ -101,7 +101,8 @@ else:
     else:
         raise ValueError("No encodings provided")
 
-def train_single(weights, ID, n):
+def train_single(ID, n):
+    global weights
     print(ID)
     result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + in_dir + "train/" + ID + '.fasta -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
 
@@ -121,16 +122,12 @@ def train_single(weights, ID, n):
 
     if n_p > 0:
         ss = 1 - np.array(ss, dtype = 'f')
+        loss = []
         for key in weights:
-            weights[key].update(ID, IDs, ss, n_p)
-        return weights
+            loss.append(weights[key].update(ID, IDs, ss, n_p))
+        return loss
     else:
-        return weights
-
-#def train_parallel(ID, n):
-#    for key in weights:
-#        weights = train_single(weights, ID, n)
-#    update_parallel_weights()
+        return [0] * len(weights)
 
 print("Beginning training...")
 
@@ -162,20 +159,19 @@ else:
     weight_pkl = args.weight_pkl
 
 for i in range(epochs):
-    start_time = timeit.default_timer()
     ID = df['seq_ID'][np.random.randint(low = 0, high = n + 1, size = 1)].item()
-    weights = train_single(weights, ID, n)
+    loss = train_single(ID, n)
 
     print("Iteration: " + str(i) + " ID: " + str(ID))
 
-    #loss.append(IDs)
+    loss.append(ID)
 
-    #with open(out_dir + output_file, 'a') as f:
-    #    writer = csv.DictWriter(f, delimiter='\t', fieldnames = colnames)
-    #    writer.writerow(dict(zip(colnames,loss)))
+    with open(out_dir + output_file, 'a') as f:
+        writer = csv.DictWriter(f, delimiter='\t', fieldnames = colnames)
+        writer.writerow(dict(zip(colnames,loss)))
 
     if i % 20 == 0:
         with open(weight_pkl, "wb") as f:
             pkl.dump(weights, f)
         view_weights()
-    print(timeit.default_timer() - start_time)
+    
