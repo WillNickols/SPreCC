@@ -101,37 +101,40 @@ else:
     else:
         raise ValueError("No encodings provided")
 
-def train_single(ID, n):
+def train_parallel(IDs, n):
     global weights
     start_time = timeit.default_timer()
-    result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + in_dir + "train/" + ID + '.fasta -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
+    input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
+    result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
     print("Mash:"  + str(timeit.default_timer() - start_time))
 
     start_time = timeit.default_timer()
     if result == "":
         n_p = 0
-    else:
-        IDs, ss = zip(*[map(item.split("\t").__getitem__, [0,2]) for item in result.split("\n")[:-1]])
-        IDs, ss = [ID.split('/')[-1].split('.')[0] for ID in IDs], list(ss)
-
-        # Remove self match
-        with suppress(ValueError):
-            index_to_remove = IDs.index(ID)
-            del IDs[index_to_remove]
-            del ss[index_to_remove]
-
-        n_p = len(IDs)
-
-    if n_p > 0:
-        ss = 1 - np.array(ss, dtype = 'f')
-        loss = []
-        for key in weights:
-            loss.append(weights[key].update(ID, IDs, ss, n_p))
         print("Else:"  + str(timeit.default_timer() - start_time))
-        return loss
+        return None
     else:
+        IDs, searches, ss = zip(*[map(item.split("\t").__getitem__, [0,1,2]) for item in result.split("\n")[:-1]])
+        IDs, searches, ss = [ID.split('/')[-1].split('.')[0] for ID in IDs], [ID.split('/')[-1].split('.')[0] for ID in searches], list(ss)
+
+        for item in set(searches):
+            IDs_cur, ss_cur = zip(*[(ID, ss) for ID, search, ss in zip(IDs, searches, ss) if search == item])
+            IDs_cur, ss_cur = list(IDs_cur), list(ss_cur)
+
+            # Remove self match
+            with suppress(ValueError):
+                index_to_remove = IDs_cur.index(item)
+                del IDs_cur[index_to_remove]
+                del ss_cur[index_to_remove]
+
+            n_p = len(IDs_cur)
+
+            ss_cur = 1 - np.array(ss_cur, dtype = 'f')
+            loss = []
+            for key in weights:
+                weights[key].update(item, IDs_cur, ss_cur, n_p)
         print("Else:"  + str(timeit.default_timer() - start_time))
-        return [0] * len(weights)
+        return None
 
 print("Beginning training...")
 
@@ -163,16 +166,16 @@ else:
     weight_pkl = args.weight_pkl
 
 for i in range(epochs):
-    ID = df['seq_ID'][np.random.randint(low = 0, high = n + 1, size = 1)].item()
-    loss = train_single(ID, n)
+    IDs = df['seq_ID'][np.random.randint(low = 0, high = n + 1, size = threads)].tolist()
+    train_parallel(IDs, n)
 
-    print("Iteration: " + str(i) + " ID: " + str(ID))
+    print("Iteration: " + str(i) + " IDs: " + " ".join(IDs))
 
-    loss.append(ID)
+    #loss.append(ID)
 
-    with open(out_dir + output_file, 'a') as f:
-        writer = csv.DictWriter(f, delimiter='\t', fieldnames = colnames)
-        writer.writerow(dict(zip(colnames,loss)))
+    #with open(out_dir + output_file, 'a') as f:
+    #    writer = csv.DictWriter(f, delimiter='\t', fieldnames = colnames)
+    #    writer.writerow(dict(zip(colnames,loss)))
 
     if i % 20 == 0:
         with open(weight_pkl, "wb") as f:

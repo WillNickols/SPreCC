@@ -114,6 +114,11 @@ class Cont:
         all_x = [value for _, value in self.condition_dict.items() if value is not None]
         self.delta = np.std(np.array(all_x)) / 5
 
+        all_x = np.array([value for key, value in self.condition_dict.items() if value is not None])
+        self.xbar = np.mean(all_x)
+        self.eta = np.std(all_x)
+        del(all_x)
+
     def set_alpha(self, alpha):
         self.alpha = float(alpha)
 
@@ -132,26 +137,24 @@ class Cont:
         else:
             n_p = 0
 
-        all_x = np.array([value for key, value in self.condition_dict.items() if key != ID and value is not None])
-        xbar = np.mean(all_x)
-        eta = np.std(all_x)
-        del(all_x)
+        xbar = self.xbar
+        eta = self.eta
 
         if n_p > 0:
             # Pieces of yhats
             sigmoids = sigmoid_array(self.w_1 * ss + self.w_0)
             U = (np.log(np.exp(-self.w_1) + np.exp(self.w_0)) - np.log(1 + np.exp(self.w_0))) / self.w_1 + 1
             hs = self.c * sigmoids / U
-            norm_c = 1/(np.sqrt(2 * math.pi) * eta * (n_p + 1))
+            norm_c = 1/(2 * math.pi * eta * (n_p + 1))
 
             # Calculate loss with integral approximation
             int_space = np.arange(y-self.delta, y+self.delta * 101/100, self.delta / 100)
             std_norm_piece = std_norm_exp((int_space - xbar)/eta)
             std_phis = np.multiply(1/hs, std_norm_exp(zs(int_space, xs, hs)))
-            loss = 1 - np.sum(norm_c * std_norm_piece + 1/((n_p + 1) * np.sqrt(2 * math.pi)) * np.sum(std_phis, axis=1)) * self.delta / 100
+            loss = 1 - np.sum(norm_c * std_norm_piece + 1/((n_p + 1) * 2 * math.pi) * np.sum(std_phis, axis=1)) * self.delta / 100
 
             # Calculate gradients
-            norm_d = 1/((n_p + 1) * np.sqrt(2 * math.pi))
+            norm_d = 1/((n_p + 1) * 2 * math.pi)
             m = np.exp(self.w_0) + np.exp(-self.w_1)
 
             dfydh = np.multiply(1 / np.square(hs), np.multiply(std_norm_exp(zs(int_space, xs, hs)), np.square(zs(int_space, xs, hs)) - 1)) # ndim(yhat) * ndim(xs)
@@ -168,7 +171,7 @@ class Cont:
             self.c = self.c - self.alpha * dldc
 
         else:
-            loss = 1 - np.sum(1/(np.sqrt(2 * math.pi) * eta) * std_norm_exp(zs(np.arange(y-self.delta, y+self.delta * 101/100, self.delta / 100), xbar, eta)[0])) * self.delta / 100
+            loss = 1 - np.sum(1/(2 * math.pi * eta) * std_norm_exp(zs(np.arange(y-self.delta, y+self.delta * 101/100, self.delta / 100), xbar, eta)[0])) * self.delta / 100
 
         if loss > 1 or loss < 0:
             raise ValueError("Loss error: out of bounds")
@@ -200,6 +203,10 @@ class Contbin:
 
         # Overall mean term in each update
         self.mean_block = np.mean(np.array([value[1] for _, value in self.condition_dict.items() if value is not None]), axis=0) * (self.n + 1) / self.n
+        all_x = np.array([value[0] for key, value in self.condition_dict.items() if value is not None])
+        self.xbar = np.mean(all_x)
+        self.eta = np.std(all_x)
+        del(all_x)
 
     def set_alpha(self, alpha):
         self.alpha = float(alpha)
@@ -211,10 +218,8 @@ class Contbin:
         else:
             y = self.condition_dict[ID]
 
-        all_x = np.array([value[0] for key, value in self.condition_dict.items() if key != ID and value is not None])
-        xbar = np.mean(all_x)
-        eta = np.std(all_x)
-        del(all_x)
+        xbar = self.xbar
+        eta = self.eta
 
         xs = [self.condition_dict[item] for item in IDs] # Get values for similar proteins
         if sum(x is not None for x in xs) > 0:
@@ -232,16 +237,16 @@ class Contbin:
                 sigmoids = sigmoid_array(self.w_1_cont * ss + self.w_0_cont)
                 U = (np.log(np.exp(-self.w_1_cont) + np.exp(self.w_0_cont)) - np.log(1 + np.exp(self.w_0_cont))) / self.w_1_cont + 1
                 hs = self.c * sigmoids / U
-                norm_c = 1/(np.sqrt(2 * math.pi) * eta * (n_p + 1))
+                norm_c = 1/(2 * math.pi * eta * (n_p + 1))
 
                 # Calculate loss with integral approximation
                 int_space = np.arange(y[0] * 0.899, y[0] * 1.101, y[0] / 500)
                 std_norm_piece = std_norm_exp((int_space - xbar)/eta)
                 std_phis = np.multiply(1/hs, std_norm_exp(zs(int_space, xs_0, hs)))
-                loss_cont = 1 - np.sum(norm_c * std_norm_piece + 1/((n_p + 1) * np.sqrt(2 * math.pi)) * np.sum(std_phis, axis=1)) * y[0] / 502
+                loss_cont = 1 - np.sum(norm_c * std_norm_piece + 1/((n_p + 1) * 2 * math.pi) * np.sum(std_phis, axis=1)) * y[0] / 501
 
                 # Calculate gradients
-                norm_d = 1/((n_p + 1) * np.sqrt(2 * math.pi))
+                norm_d = 1/((n_p + 1) * 2 * math.pi)
                 m = np.exp(self.w_0_cont) + np.exp(-self.w_1_cont)
 
                 dfydh = np.multiply(1 / np.square(hs), np.multiply(std_norm_exp(zs(int_space, xs_0, hs)), np.square(zs(int_space, xs_0, hs)) - 1)) # ndim(yhat) * ndim(xs)
@@ -249,9 +254,9 @@ class Contbin:
                 dhdw1 = np.add(np.multiply(ss, self.c/U * np.multiply(sigmoids, 1-sigmoids)), -np.multiply(self.c/np.square(np.multiply(self.w_1_cont, U)) * sigmoids, -self.w_1_cont * np.exp(-self.w_1_cont) / m - (np.log(m) - np.log(1 + np.exp(self.w_0_cont))))) # ndim(xs)
                 dhdc = hs/self.c # ndim(xs)
 
-                dldw0 = - np.sum(norm_d * np.multiply(dfydh, dhdw0)) * y[0] / 502
-                dldw1 = - np.sum(norm_d * np.multiply(dfydh, dhdw1)) * y[0] / 502
-                dldc = - np.sum(norm_d * np.multiply(dfydh, dhdc)) * y[0] / 502 + 2 * (self.c - eta) * self.beta_cont
+                dldw0 = - np.sum(norm_d * np.multiply(dfydh, dhdw0)) * y[0] / 501
+                dldw1 = - np.sum(norm_d * np.multiply(dfydh, dhdw1)) * y[0] / 501
+                dldc = - np.sum(norm_d * np.multiply(dfydh, dhdc)) * y[0] / 501 + 2 * (self.c - eta) * self.beta_cont
 
                 self.w_0_cont = self.w_0_cont - self.alpha * dldw0
                 self.w_1_cont = self.w_1_cont - self.alpha * dldw1
@@ -286,7 +291,7 @@ class Contbin:
 
         else:
             if y[1]:
-                loss_cont = 1 - np.sum(1/(np.sqrt(2 * math.pi) * eta) * std_norm_exp(zs(np.arange(y[0] * 0.899, y[0] * 1.101, y[0] / 500), xbar, eta)[0])) * y[0] / 502
+                loss_cont = 1 - np.sum(1/(2 * math.pi * eta) * std_norm_exp(zs(np.arange(y[0] * 0.899, y[0] * 1.101, y[0] / 500), xbar, eta)[0])) * y[0] / 501
             else:
                 loss_cont = 0
             loss_bin = -np.log(self.mean_block - y[1]/self.n)
@@ -308,7 +313,7 @@ def std_norm_exp2d(x):
 
 class Bicontbin:
     # Initalize weights and store variables in a useful way
-    def __init__(self, condition, metadata, alpha = 0.1, beta_cont = 0.01, beta_bin = 0.01, w_10_cont = -1, w_11_cont = -2, c_1 = 5, w_20_cont = -1, w_21_cont = -2, c_2 = 5, w_0_bin = -1, w_1_bin = 3, done_updating = False):
+    def __init__(self, condition, metadata, alpha = 0.01, beta_cont = 0.01, beta_bin = 0.01, w_10_cont = -1, w_11_cont = -2, c_1 = 5, w_20_cont = -1, w_21_cont = -2, c_2 = 5, w_0_bin = -1, w_1_bin = 3, done_updating = False):
         # Initialize continuous parameters
         self.w_10_cont = w_10_cont
         self.w_11_cont = w_11_cont
@@ -336,6 +341,14 @@ class Bicontbin:
         self.delta_1 = np.std(np.array(all_x_1)) / 5
         self.delta_2 = np.std(np.array(all_x_2)) / 5
 
+        self.xbar_1 = np.mean(np.array(all_x_1))
+        self.eta_1 = np.std(np.array(all_x_1))
+        del(all_x_1)
+
+        self.xbar_2 = np.mean(np.array(all_x_2))
+        self.eta_2 = np.std(np.array(all_x_2))
+        del(all_x_2)
+
     def set_alpha(self, alpha):
         self.alpha = float(alpha)
 
@@ -347,14 +360,10 @@ class Bicontbin:
         else:
             y = self.condition_dict[ID]
 
-        all_x_1, all_x_2 = zip(*[(value[0], value[1]) for key, value in self.condition_dict.items() if key != ID and value is not None])
-        xbar_1 = np.mean(np.array(all_x_1))
-        eta_1 = np.std(np.array(all_x_1))
-        del(all_x_1)
-
-        xbar_2 = np.mean(np.array(all_x_2))
-        eta_2 = np.std(np.array(all_x_2))
-        del(all_x_2)
+        xbar_1 = self.xbar_1
+        xbar_2 = self.xbar_2
+        eta_1 = self.eta_1
+        eta_2 = self.eta_2
 
         xs = [self.condition_dict[item] for item in IDs] # Get values for similar proteins
         if sum(x is not None for x in xs) > 0:
@@ -375,16 +384,16 @@ class Bicontbin:
                 U_2 = (np.log(np.exp(-self.w_21_cont) + np.exp(self.w_20_cont)) - np.log(1 + np.exp(self.w_20_cont))) / self.w_21_cont + 1
                 hs_2 = self.c_2 * sigmoids_2 / U_2
 
-                norm_c = 1/(np.sqrt(2 * math.pi) * eta_1 * eta_2 * (n_p + 1))
+                norm_c = 1/(2 * math.pi * eta_1 * eta_2 * (n_p + 1))
 
                 # Calculate loss with integral approximation
-                int_space = np.mgrid[(y[0] * 0.899):(y[0] * 1.101 + y[0]/1000):(y[0] / 500), (y[1] * 0.899):(y[1] * 1.101):(y[1] / 500)].reshape(2,-1).T
+                int_space = np.mgrid[(y[0] * 0.899):(y[0] * 1.101 + y[0]/1000):(y[0] / 500), (y[1] * 0.899):(y[1] * 1.101 + y[0]/1000):(y[1] / 500)].reshape(2,-1).T
                 std_norm_piece = std_norm_exp2d(zs2d(int_space, [xbar_1], [xbar_2], [eta_1], [eta_2]))
                 std_phis = np.divide(std_norm_exp2d(zs2d(int_space, xs_1, xs_2, hs_1, hs_2)), np.multiply(hs_1, hs_2))
-                loss_cont = 1 - np.sum(norm_c * np.sum(std_norm_piece, axis=1) + 1/((n_p + 1) * np.sqrt(2 * math.pi)) * np.sum(std_phis, axis=1)) * y[0] / 502 * y[1] / 502
+                loss_cont = 1 - np.sum(norm_c * np.sum(std_norm_piece, axis=1) + 1/((n_p + 1) * 2 * math.pi) * np.sum(std_phis, axis=1)) * y[0] / 501 * y[1] / 501
 
                 # Calculate gradients
-                norm_d = 1/((n_p + 1) * np.sqrt(2 * math.pi))
+                norm_d = 1/((n_p + 1) * 2 * math.pi)
                 m_1 = np.exp(self.w_10_cont) + np.exp(-self.w_11_cont)
 
                 dfydh1 = 1 / hs_2 * 1 / np.square(hs_1) * np.multiply(std_norm_exp(zs(int_space, xs_2, hs_2)), np.multiply(std_norm_exp(zs(int_space, xs_1, hs_1)), np.square(zs(int_space, xs_1, hs_1)) - 1))
@@ -392,9 +401,9 @@ class Bicontbin:
                 dhdw11 = np.add(np.multiply(ss, self.c_1/U_1 * np.multiply(sigmoids_1, 1-sigmoids_1)), -np.multiply(self.c_1/np.square(np.multiply(self.w_11_cont, U_1)) * sigmoids_1, -self.w_11_cont * np.exp(-self.w_11_cont) / m_1 - (np.log(m_1) - np.log(1 + np.exp(self.w_10_cont)))))
                 dhdc1 = hs_1/self.c_1 # ndim(xs)
 
-                dldw10 = - np.sum(norm_d * np.multiply(dfydh1, dhdw10)) * y[0] / 502 * y[1] / 502
-                dldw11 = - np.sum(norm_d * np.multiply(dfydh1, dhdw11)) * y[0] / 502 * y[1] / 502
-                dldc1 = - np.sum(norm_d * np.multiply(dfydh1, dhdc1)) * y[0] / 502 * y[1] / 502 + 2 * (self.c_1 - eta_1) * self.beta_cont
+                dldw10 = - np.sum(norm_d * np.multiply(dfydh1, dhdw10)) * y[0] / 501 * y[1] / 501
+                dldw11 = - np.sum(norm_d * np.multiply(dfydh1, dhdw11)) * y[0] / 501 * y[1] / 501
+                dldc1 = - np.sum(norm_d * np.multiply(dfydh1, dhdc1)) * y[0] / 501 * y[1] / 501 + 2 * (self.c_1 - eta_1) * self.beta_cont
 
                 self.w_10_cont = self.w_10_cont - self.alpha * dldw10
                 self.w_11_cont = self.w_11_cont - self.alpha * dldw11
@@ -410,9 +419,9 @@ class Bicontbin:
                 dhdw21 = np.add(np.multiply(ss, self.c_2/U_2 * np.multiply(sigmoids_2, 1-sigmoids_2)), -np.multiply(self.c_2/np.square(np.multiply(self.w_21_cont, U_2)) * sigmoids_2, -self.w_21_cont * np.exp(-self.w_21_cont) / m_2 - (np.log(m_2) - np.log(1 + np.exp(self.w_20_cont)))))
                 dhdc2 = hs_2/self.c_2 # ndim(xs)
 
-                dldw20 = - np.sum(norm_d * np.multiply(dfydh2, dhdw20)) * y[0] / 502 * y[1] / 502
-                dldw21 = - np.sum(norm_d * np.multiply(dfydh2, dhdw21)) * y[0] / 502 * y[1] / 502
-                dldc2 = - np.sum(norm_d * np.multiply(dfydh2, dhdc2)) * y[0] / 502 * y[1] / 502 * (self.c_2 - eta_2) * self.beta_cont
+                dldw20 = - np.sum(norm_d * np.multiply(dfydh2, dhdw20)) * y[0] / 501 * y[1] / 501
+                dldw21 = - np.sum(norm_d * np.multiply(dfydh2, dhdw21)) * y[0] / 501 * y[1] / 501
+                dldc2 = - np.sum(norm_d * np.multiply(dfydh2, dhdc2)) * y[0] / 501 * y[1] / 501 * (self.c_2 - eta_2) * self.beta_cont
 
                 self.w_20_cont = self.w_20_cont - self.alpha * dldw20
                 self.w_21_cont = self.w_21_cont - self.alpha * dldw21
@@ -448,16 +457,17 @@ class Bicontbin:
 
         else:
             if y[2]:
-                int_space = np.mgrid[(y[0] * 0.899):(y[0] * 1.101):(y[0] / 500), (y[1] * 0.899):(y[1] * 1.101):(y[1] / 500)].reshape(2,-1).T
+                norm_c = 1/(2 * math.pi * eta_1 * eta_2 * (n_p + 1))
+                int_space = np.mgrid[(y[0] * 0.899):(y[0] * 1.101 + y[0]/1000):(y[0] / 500), (y[1] * 0.899):(y[1] * 1.101 + y[0]/1000):(y[1] / 500)].reshape(2,-1).T
                 std_norm_piece = std_norm_exp2d(zs2d(int_space, [xbar_1], [xbar_2], [eta_1], [eta_2]))
-                loss_cont = 1 - np.sum(norm_c * np.sum(std_norm_piece, axis=1)) * y[0] / 502 * y[1] / 502
+                loss_cont = 1 - np.sum(norm_c * np.sum(std_norm_piece, axis=1)) * y[0] / 501 * y[1] / 501
             else:
                 loss_cont = 0
             loss_bin = -np.log(self.mean_block - y[2]/self.n)
 
         if loss_cont is np.nan:
             raise ValueError("Invalid loss from continuous predictor")
-        if loss_cont > 1.05 or loss_cont < -0.05:
+        if loss_cont > 1.01 or loss_cont < -0.01:
             raise ValueError("Loss error: out of bounds: " + str(loss_cont))
         if loss_bin is np.nan:
             raise ValueError("Invalid loss from categorical predictor")
