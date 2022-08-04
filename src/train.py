@@ -103,11 +103,8 @@ else:
 
 def train_single(ID, n):
     global weights
-    start_time = timeit.default_timer()
     result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + in_dir + "train/" + ID + '.fasta -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
-    print("Mash:"  + str(timeit.default_timer() - start_time))
 
-    start_time = timeit.default_timer()
     if result == "":
         n_p = 0
     else:
@@ -127,10 +124,8 @@ def train_single(ID, n):
         loss = []
         for key in weights:
             loss.append(weights[key].update(ID, IDs, ss, n_p))
-        print("Else:"  + str(timeit.default_timer() - start_time))
         return loss
     else:
-        print("Else:"  + str(timeit.default_timer() - start_time))
         return [0] * len(weights)
 
 print("Beginning training...")
@@ -144,6 +139,7 @@ def view_weights():
                 print(value.c)
             except:
                 print(value.c_1)
+                print(value.c_2)
 
 if output_file == "":
     output_file = "training.log"

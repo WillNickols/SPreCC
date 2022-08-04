@@ -8,7 +8,6 @@ from pathlib import Path
 import os
 import random
 from contextlib import suppress
-import time
 import csv
 import math
 from scipy.stats import norm
@@ -103,15 +102,11 @@ else:
 
 def train_parallel(IDs, n):
     global weights
-    start_time = timeit.default_timer()
     input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
     result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
-    print("Mash:"  + str(timeit.default_timer() - start_time))
 
-    start_time = timeit.default_timer()
     if result == "":
         n_p = 0
-        print("Else:"  + str(timeit.default_timer() - start_time))
         return None
     else:
         IDs, searches, ss = zip(*[map(item.split("\t").__getitem__, [0,1,2]) for item in result.split("\n")[:-1]])
@@ -133,7 +128,6 @@ def train_parallel(IDs, n):
             loss = []
             for key in weights:
                 weights[key].update(item, IDs_cur, ss_cur, n_p)
-        print("Else:"  + str(timeit.default_timer() - start_time))
         return None
 
 print("Beginning training...")
@@ -147,6 +141,7 @@ def view_weights():
                 print(value.c)
             except:
                 print(value.c_1)
+                print(value.c_2)
 
 if output_file == "":
     output_file = "training.log"
@@ -177,7 +172,7 @@ for i in range(epochs):
     #    writer = csv.DictWriter(f, delimiter='\t', fieldnames = colnames)
     #    writer.writerow(dict(zip(colnames,loss)))
 
-    if i % 20 == 0:
+    if i % 5 == 0:
         with open(weight_pkl, "wb") as f:
             pkl.dump(weights, f)
         view_weights()

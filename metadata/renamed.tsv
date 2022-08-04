@@ -1,3 +1,4 @@
+Column1	Column2
 to	
 drops	
 dt	
@@ -21,22 +22,24 @@ x
 a	
 compound	
 dtsoaking	
+names	
 "1,2,3-heptanetriol"	"1,2,3-heptanetriol"
 "1,2-propanediol"	"1,2-propanediol"
 "1,3-propanediol"	"1,3-propanediol"
 "1,4-butanediol"	"1,4-butanediol"
-"1,4-dioxane"	"1,4-dioxane"
-"1,6-hexanediol"	"1,6-hexanediol"
+"1,4-dioxane"	"dioxane"
+"1,6-hexanediol"	"hexanediol"
 1-butanol	1-butanol
-1-propanol	1-propanol
+1-propanol	propanol
 2-hydroxyethyl disulfide	2-hydroxyethyl disulfide
 2-mercaptoethanol	2-mercaptoethanol
 bme	2-mercaptoethanol
 mercaptoethanol	2-mercaptoethanol
-"2-methyl-2,4-pentanediol"	"2-methyl-2,4-pentanediol"
-"/--2-methyl-2,4-pentanediol"	"2-methyl-2,4-pentanediol"
-"2-methyl-2,4-pentanediol mpd"	"2-methyl-2,4-pentanediol mpd"
-2-propanol	2-propanol
+"2-methyl-2,4-pentanediol"	"mpd"
+2-methyl-2	"mpd"
+"/--2-methyl-2,4-pentanediol"	"mpd"
+"2-methyl-2,4-pentanediol mpd"	"mpd"
+2-propanol	isopropanol
 acetate	acetate
 acetic acid	acetic acid
 acetone	acetone
@@ -49,6 +52,7 @@ nh4 oac	ammonium acetate
 nh4 ac	ammonium acetate
 nh4 acetate	ammonium acetate
 nh4-acetate	ammonium acetate
+ammonium cl	ammonium chloride
 ammonium chloride	ammonium chloride
 nh4 cl	ammonium chloride
 ammonium citrate	ammonium citrate
@@ -56,10 +60,12 @@ ammonium citrate tribasic	ammonium citrate
 ammonium citrate dibasic	ammonium citrate
 tri ammonium citrate	ammonium citrate
 di ammonium hydrogen citrate	ammonium citrate
+diammonium hydrogen citrate	ammonium citrate
 ammonium fluoride	ammonium fluoride
 nh4 f	ammonium fluoride
 ammonium formate	ammonium formate
 ammonium iodide	ammonium iodide
+nh4 i	ammonium iodide
 ammonium nitrate	ammonium nitrate
 nh4 no3	ammonium nitrate
 ammonium phosphate	ammonium phosphate
@@ -75,26 +81,33 @@ ammonium sulphate	ammonium sulfate
 nh42 so4	ammonium sulfate
 amso4	ammonium sulfate
 nh4 so4	ammonium sulfate
+am2 so4	ammonium sulfate
 ammoniumsulfate	ammonium sulfate
+ammonia sulfate	ammonium sulfate
 ammonium tartrate dibasic	ammonium tartrate
 ammonium tartrate	ammonium tartrate
 di ammonium tartrate	ammonium tartrate
+diammonium tartrate	ammonium tartrate
 amp	amp
 amppnp	amp pnp
 amp pnp	amp pnp
 arginine hcl	arginine
-atp	atp
+atp	adenosine triphosphate
 coh18 n6	azane cobalt
 azide	azide
 ada	azodicarbonamide
 bacl2	barium chloride
+bacl	barium chloride
 barium chloride	barium chloride
 benzamidine	benzamidine
 benzamidine hcl	benzamidine
 bes	beryllium sulfide
-beta mercaptoethanol	beta mercaptoethanol
+beta mercaptoethanol	2-mercaptoethanol
+beta octyl glucoside	beta octyl glucoside
+beta octylglucoside	beta octyl glucoside
 bicine	bicine
 bicine naoh	bicine
+sodium bicine	bicine
 bicine/trizma base	bicine trizma
 bis tris	bis tris
 bistris	bis tris
@@ -109,23 +122,26 @@ bis tris propane	bis tris propane
 btp	bis tris propane
 bistris propane	bis tris propane
 bistrispropane	bis tris propane
+btprop	bis tris propane
 bicine csoh	biscene cesium hydroxide
-bog	bog
-btprop	btprop
+bog	beta octyl glucoside
 cacodylate	cacodylate
 cacodylic acid	cacodylic acid
 cdcl2	cadmium chloride
 cadmium chloride	cadmium chloride
+cdcl	cadmium chloride
+cd sulfate	cadmium sulfate
 cadmium sulfate	cadmium sulfate
 cdso4	cadmium sulfate
-cscl	caesium chloride
 calcium acetate	calcium acetate
 ca acetate	calcium acetate
 caoac2	calcium acetate
 calcium acetate hydrate	calcium acetate
 caac2	calcium acetate
 caacetate	calcium acetate
+calcium diacetate	calcium acetate
 cacl2	calcium chloride
+cl2 ca	calcium chloride
 calcium chloride	calcium chloride
 calcium chloride dihydrate	calcium chloride
 cacl	calcium chloride
@@ -133,6 +149,7 @@ caps	caps
 capso	capso
 carboxylic acids	carboxylic acids
 cdk2	cdk2
+cscl	cesium chloride
 cesium chloride	cesium chloride
 chaps	chaps
 ches	ches
@@ -140,6 +157,7 @@ citrate	citrate
 citric acid	citric acid
 cocl2	cobalt chloride
 cobalt chloride	cobalt chloride
+cobaltii chloride	cobalt chloride
 cobalt hexamine	cobalt hexamine
 coa	coenzyme a
 cucl2	copper chloride
@@ -148,19 +166,21 @@ cryo	cryo
 cymal-6	cymal-6
 d galactose	d galactose
 d glucose	d glucose
+ddm	ddm
 diethylene glycol	diethylene glycol
 dmso	dimethyl sulfoxide
 dimethyl sulfoxide	dimethyl sulfoxide
 dioxane	dioxane
+dte	dithioerythritol
 dithiothreitol	dithiothreitol
-dl alanine	dl alanine
-dl malic acid	dl malic acid
-dl serine	dl serine
+dl alanine	alanine
+dl malic acid	malic acid
+dl serine	serine
 dna	dna
 ldao	dodecyldimethylamine oxide
-dtt	dtt
-dtt set up	dtt
-dtt crystallization	dtt
+dtt	dithiothreitol
+dtt set up	dithiothreitol
+dtt crystallization	dithiothreitol
 egta	egtazic acid
 ethanol	ethanol
 etoh	ethanol
@@ -170,6 +190,7 @@ ethyleneglycol	ethylene glycol
 edta	ethylenediaminetetraacetic acid
 etgly	ethylglycene
 fad	fad
+fmn	flavin mononucleotide
 gdp	gdp
 glucose	glucose
 gsh	glutathione
@@ -182,6 +203,7 @@ glycine	glycine
 gtp	gtp
 guanidine hcl	guanidine
 guanidine hydrochloride	guanidine
+hb	hemoglobin
 hepes	hepes
 na hepes	hepes
 hepes naoh	hepes
@@ -202,6 +224,7 @@ hexaamminecobalt iii chloride	hexaamminecobalt iii chloride
 hexanediol	hexanediol
 hcl	hydrochloric acid
 imidazole	imidazole
+imidazol	imidazole
 imidazole hcl	imidazole
 imidazole malate	imidazole malate
 inhibitor	inhibitor
@@ -216,12 +239,16 @@ l cysteine	l cysteine
 l proline	l proline
 l tyrosine	l tyrosine
 lactose	lactose
+lioac	lithium acetate
+li acetate	lithium acetate
 lithium acetate	lithium acetate
 licl	lithium chloride
 lithium chloride	lithium chloride
 licl2	lithium chloride
+li citrate	lithium citrate
 lithium citrate	lithium citrate
 tri lithium citrate	lithium citrate
+li nitrate	lithium nitrate
 lithium nitrate	lithium nitrate
 lino3	lithium nitrate
 lithium sulfate	lithium sulfate
@@ -230,21 +257,27 @@ liso4	lithium sulfate
 lithium sulphate	lithium sulfate
 lithium sulfate monohydrate	lithium sulfate
 li sulfate	lithium sulfate
+lysine	lysine
 magnesium acetate	magnesium acetate
 mgac2	magnesium acetate
 magnesium acetate tetrahydrate	magnesium acetate
 mgoac2	magnesium acetate
 mgacetate	magnesium acetate
 mgac	magnesium acetate
+mg acetate	magnesium acetate
 mgcl2	magnesium chloride
 magnesium chloride	magnesium chloride
 magnesium chloride hexahydrate	magnesium chloride
+mg chloride	magnesium chloride
 mgcl	magnesium chloride
 mgcl2.6 h2 o	magnesium chloride
+mg formate	magnesium formate
 magnesium formate	magnesium formate
 magnesium formate dihydrate	magnesium formate
+mg nitrate	magnesium nitrate
 magnesium nitrate	magnesium nitrate
 mgno32	magnesium nitrate
+mg sulfate	magnesium sulfate
 mgso4	magnesium sulfate
 magnesium sulfate	magnesium sulfate
 magnesium sulphate	magnesium sulfate
@@ -254,6 +287,7 @@ malonic acid	malonic acid
 maltose	maltose
 mncl2	manganese chloride
 manganese chloride	manganese chloride
+mn sulfate	manganese sulfate
 mnso4	manganese sulfate
 mega	mega
 mepeg2000	mepeg2000
@@ -266,7 +300,9 @@ na mes	mes
 sodium mes	mes
 mes:naoh	mes
 2-n morpholinoethanesulfonic acid	mes
+2-n morpholinoethanesulfonic acid	mes
 mes/imidazole	mes imidazole
+imidazole/mes	mes imidazole
 methanol	methanol
 mib	mib
 mmt	mmt
@@ -276,7 +312,7 @@ morpheus	morpheus
 mpd	mpd
 mpeg2000	mpeg2000
 mpeg5000	mpeg5000
-n octyl beta d glucoside	n octyl beta d glucoside
+n octyl beta d glucoside	beta octyl glucoside
 nac	n-acetylcysteine
 nad	nad
 nadh	nadh
@@ -334,24 +370,33 @@ phosphate	phosphate
 citrate phosphate	phosphate citrate
 phosphate citrate	phosphate citrate
 phosphate/citrate	phosphate citrate
+citrate/phosphate	phosphate citrate
 pipes	pipes
 polyacrylic acid	polyacrylic acid
+polyacrylic acid	polyacrylic acid 5100
 pcb	polychlorinated biphenyl
+k acetate	potassium acetate
+koac	potassium acetate
 potassium acetate	potassium acetate
 kbr	potassium bromide
 potassium bromide	potassium bromide
 kcl	potassium chloride
 potassium chloride	potassium chloride
+k citrate	potassium citrate
 potassium citrate	potassium citrate
 tri potassium citrate	potassium citrate
+potassium citrate tribasic	potassium citrate
 potassium fluoride	potassium fluoride
 kf	potassium fluoride
+k formate	potassium formate
 potassium formate	potassium formate
 ki	potassium iodide
 potassium iodide	potassium iodide
+k nitrate	potassium nitrate
 potassium nitrate	potassium nitrate
 kno3	potassium nitrate
 potassium phosphate	potassium phosphate
+potassium hydrogen phosphate	potassium phosphate
 kh2 po4	potassium phosphate
 k2 hpo4	potassium phosphate
 potassium phosphate dibasic	potassium phosphate
@@ -361,11 +406,14 @@ k phosphate	potassium phosphate
 kpi	potassium phosphate
 kpo4	potassium phosphate
 potassium phosphate calcium chloride pdtp	potassium phosphate calcium chloride pdtp
+k sulfate	potassium sulfate
 potassium sulfate	potassium sulfate
+k2 so4	potassium sulfate
 kscn	potassium thiocyanate
+k thiocyanate	potassium thiocyanate
 potassium thiocyanate	potassium thiocyanate
 proline	proline
-propan-2-ol	propan-2-ol
+propan-2-ol	isopropanol
 propanol	propanol
 pvp k15	pvp k15
 plp	pyridoxal phosphate
@@ -382,7 +430,7 @@ ch3 coona	sodium acetate
 sodium acetate/acetic acid	sodium acetate
 nan3	sodium azide
 sodium azide	sodium azide
-sodium bicine	sodium bicine
+na azide	sodium azide
 nabr	sodium bromide
 sodium bromide	sodium bromide
 sodium cacodylate	sodium cacodylate
@@ -403,8 +451,11 @@ sodium citrate tribasic dehydrate	sodium citrate
 na3 citrate	sodium citrate
 sodium citrate/citric acid	sodium citrate
 tri na citrate	sodium citrate
-sodium succinate	sodium cuccinate
+na succinate	sodium succinate
+sodium succinate	sodium succinate
+na dithionite	sodium dithionite
 sodium dithionite	sodium dithionite
+na edta	sodium edetate
 sodium edta	sodium edetate
 naf	sodium fluoride
 sodium fluoride	sodium fluoride
@@ -415,8 +466,11 @@ nai	sodium iodide
 sodium iodide	sodium iodide
 sodium malonate	sodium malonate
 na malonate	sodium malonate
+namalonate	sodium malonate
+na nitrate	sodium nitrate
 sodium nitrate	sodium nitrate
 nano3	sodium nitrate
+na oxamate	sodium oxamate
 sodium oxamate	sodium oxamate
 sodium phosphate	sodium phosphate
 nah2 po4	sodium phosphate
@@ -428,11 +482,15 @@ sodium phosphate monobasic monohydrate	sodium phosphate
 sodium phosphate dibasic	sodium phosphate
 napi	sodium phosphate
 na phosphate	sodium phosphate
+disodium hydrogen phosphate	sodium phosphate
 na/k phosphate	sodium potassium phosphate
 sodium/potassium phosphate	sodium potassium phosphate
 sodium potassium phosphate	sodium potassium phosphate
 na k phosphate	sodium potassium phosphate
 nak phosphate	sodium potassium phosphate
+k/nah2 po4	sodium potassium phosphate
+na/kpo4	sodium potassium phosphate
+na/k dibasic/monobasic phosphate	sodium potassium phosphate
 potassium sodium tartrate	sodium potassium tartrate
 potassium sodium tartrate tetrahydrate	sodium potassium tartrate
 na/k tartrate	sodium potassium tartrate
@@ -443,11 +501,13 @@ potassium/sodium tartrate	sodium potassium tartrate
 na k tartrate	sodium potassium tartrate
 k na tartrate	sodium potassium tartrate
 nak tartrate	sodium potassium tartrate
+na sulfate	sodium sulfate
 sodium sulfate	sodium sulfate
 na2 so4	sodium sulfate
 sodium sulphate	sodium sulfate
 sodium tartrate	sodium tartrate
 na tartrate	sodium tartrate
+na thiocyanate	sodium thiocyanate
 sodium thiocyanate	sodium thiocyanate
 nascn	sodium thiocyanate
 spermidine	spermidine
@@ -455,6 +515,7 @@ spermine	spermine
 spermine tetrahydrochloride	spermine tetrahydrochloride
 spermine hcl	spermine tetrahydrochloride
 spermine tetra hcl	spermine tetrahydrochloride
+spermine tetrachloride	spermine tetrahydrochloride
 spg	spg
 srcl2	strontium chloride
 strontium chloride	strontium chloride
@@ -471,6 +532,7 @@ tert butanol	tert butanol
 t butanol	tert butanol
 trehalose	trehalose
 tricl	trichloride
+tea	triethanolamine
 trimethylamine n oxide	trimethylamine n oxide
 tmao	trimethylamine n oxide
 trimethylamine n oxide dihydrate	trimethylamine n oxide
@@ -483,9 +545,12 @@ tris hydrochloride	tris
 tris:hcl	tris
 tris base	tris
 triscl	tris
+tris chloride	tris
 tris acetate	tris acetate
 tris/bicine	tris bicine
 tris bicine	tris bicine
+bicine/tris	tris bicine
+trypsin	trypsin
 tryptone	tryptone
 urea	urea
 xylitol	xylitol
@@ -494,7 +559,7 @@ zinc acetate	zinc acetate
 zn acetate	zinc acetate
 zncl2	zinc chloride
 zinc chloride	zinc chloride
+zn sulfate	zinc sulfate
 znso4	zinc sulfate
 zinc sulfate	zinc sulfate
 zinc sulphate	zinc sulfate
-names	
