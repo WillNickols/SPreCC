@@ -3,6 +3,7 @@ from Bio import SeqIO
 import subprocess
 import multiprocessing as mp
 import numpy as np
+from numpy.random import default_rng
 import pandas as pd
 from pathlib import Path
 import os
@@ -16,20 +17,21 @@ import pickle as pkl
 from weight_models import *
 import timeit
 import copy
-import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--in-dir", help="input directory")
 parser.add_argument("--out-dir", help="output directory")
 parser.add_argument("--metadata", help="metadata tsv")
 parser.add_argument("--encodings", help="encodings tsv", default=None)
-parser.add_argument("--use-prev-weights", help="Use previous weights from pkl file", default=False)
+parser.add_argument("--use-prev-weights", help="Use previous weights from pkl file", action='store_true')
 parser.add_argument("--weight-pkl", help="pkl file for weights", default=None)
 parser.add_argument("--epochs", help="epochs", type=int, default = 10000)
 parser.add_argument("--output-file", help="specific output file", default = "")
 parser.add_argument("--stop-early", help="stop early if converged", type=float, default=0)
 parser.add_argument("--threads", help="threads to train on", default = 4, type=int)
 parser.add_argument("--alpha", help="alpha", default=0.1, type=float)
+parser.add_argument("--seed", help="random seed", default=1, type=int)
+parser.add_argument("--save-freq", help="save frequency", default=100, type=int)
 args = parser.parse_args()
 
 in_dir = args.in_dir
@@ -40,6 +42,8 @@ epochs = args.epochs
 threads = args.threads
 output_file = args.output_file
 stop_early = args.stop_early
+seed = args.seed
+save_freq = args.save_freq
 
 out_dir = "/" + out_dir.strip("/") + "/"
 if not os.path.isdir(out_dir):
@@ -87,7 +91,7 @@ if args.use_prev_weights:
         with open(args.weight_pkl, 'rb') as f:
             weights = pkl.load(f)
     except:
-        raise ValueError("Unable to load weight JSON")
+        raise ValueError("Unable to load weight PKL")
 else:
     if encodings is not None:
         encodings_tmp = pd.read_csv(encodings, sep='\t')
@@ -107,11 +111,13 @@ def train_parallel(IDs, n):
 
     if result == "":
         n_p = 0
-        return None
+        return None, False
     else:
         IDs, searches, ss = zip(*[map(item.split("\t").__getitem__, [0,1,2]) for item in result.split("\n")[:-1]])
         IDs, searches, ss = [ID.split('/')[-1].split('.')[0] for ID in IDs], [ID.split('/')[-1].split('.')[0] for ID in searches], list(ss)
 
+        all_loss = []
+        all_done = True
         for item in set(searches):
             IDs_cur, ss_cur = zip(*[(ID, ss) for ID, search, ss in zip(IDs, searches, ss) if search == item])
             IDs_cur, ss_cur = list(IDs_cur), list(ss_cur)
@@ -125,10 +131,12 @@ def train_parallel(IDs, n):
             n_p = len(IDs_cur)
 
             ss_cur = 1 - np.array(ss_cur, dtype = 'f')
-            loss = []
             for key in weights:
-                weights[key].update(item, IDs_cur, ss_cur, n_p)
-        return None
+                loss = weights[key].update(item, IDs_cur, ss_cur, n_p)
+                all_done = all_done and weights[key].done_updating
+
+            all_loss.append(loss)
+        return all_loss, all_done
 
 print("Beginning training...")
 
@@ -150,8 +158,8 @@ colnames = [key for key, _ in weights.items()]
 colnames.append("ID")
 
 with open(out_dir + output_file, 'w') as f:
-    writer = csv.DictWriter(f, delimiter='\t', fieldnames = colnames)
-    writer.writerow(dict(zip(colnames, colnames)))
+    writer = csv.writer(f, delimiter='\t')
+    writer.writerow(colnames)
 
 n = len(df.index) - 1
 
@@ -160,19 +168,32 @@ if args.weight_pkl is None:
 else:
     weight_pkl = args.weight_pkl
 
+np.random.seed(seed)
 for i in range(epochs):
-    IDs = df['seq_ID'][np.random.randint(low = 0, high = n + 1, size = threads)].tolist()
-    train_parallel(IDs, n)
+    rng = default_rng()
+    numbers = rng.choice(n + 1, size = n + 1, replace = False)
+    IDs = df['seq_ID'][numbers].tolist()
 
-    print("Iteration: " + str(i) + " IDs: " + " ".join(IDs))
+    batches = [IDs[i:i+threads] for i in range(0, len(all_IDs), 3)]
+    for j, batch in enumerate(batches):
+        all_loss, all_done = train_parallel(batch, n)
+        print("Iteration: " + str(i) + " IDs: " + " ".join(IDs))
 
-    #loss.append(ID)
+        if all_loss is not None:
+            with open(out_dir + output_file, 'a') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(all_loss)
 
-    #with open(out_dir + output_file, 'a') as f:
-    #    writer = csv.DictWriter(f, delimiter='\t', fieldnames = colnames)
-    #    writer.writerow(dict(zip(colnames,loss)))
+        if j % save_freq == 0:
+            with open(weight_pkl, "wb") as f:
+                pkl.dump(weights, f)
+            view_weights()
 
-    if i % 5 == 0:
-        with open(weight_pkl, "wb") as f:
-            pkl.dump(weights, f)
-        view_weights()
+        if all_done:
+            print("Weights converged.  Saving weights and ending training...")
+            with open(weight_pkl, "wb") as f:
+                pkl.dump(weights, f)
+            break
+    else:
+        continue
+    break

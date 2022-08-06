@@ -34,7 +34,7 @@ def get_encoding(encoding, condition, metadata):
 # Categorical variables
 class Cat:
     # Initalize weights and store variables in a useful way
-    def __init__(self, condition, metadata, alpha = 0.1, beta = 0.01, w_0 = -1, w_1 = 3, done_updating = False):
+    def __init__(self, condition, metadata, alpha = 0.1, beta = 0.01, w_0 = -1, w_1 = 3, convergence_radius=0.1, convergence_length=20000, done_updating = False):
         self.w_0 = w_0
         self.w_1 = w_1
         self.alpha = alpha
@@ -50,59 +50,77 @@ class Cat:
         # Overall mean term in each update
         self.mean_block = np.mean(np.array([value for _, value in self.condition_dict.items() if value is not None]), axis=0) * (self.n + 1) / self.n
 
+        # Store previous weights for checking convergence
+        self.w_0_history = np.linspace(self.w_0 + convergence_radius * convergence_length, self.w_0, num=convergence_length)
+        self.w_1_history = np.linspace(self.w_1 + convergence_radius * convergence_length, self.w_1, num=convergence_length)
+        self.convergence_radius = convergence_radius
+        self.convergence_length
+
     def set_alpha(self, alpha):
         self.alpha = float(alpha)
 
     # Update the weights with gradient descent using ID as the protein of interest, IDs as the similar proteins, ss as their sequence similarity, and n_p as the number of similar proteins
     def update(self, ID, IDs, ss, n_p):
 
-        if self.condition_dict[ID] is None:
-            return None
-        else:
-            y = np.argmax(self.condition_dict[ID]) # Only the index of the correct one matters here
-
-        xs = [self.condition_dict[item][0][y] if self.condition_dict[item] is not None else None for item in IDs] # Get values for similar proteins
-        if sum(x is not None for x in xs) > 0:
-            xs, ss = zip(*[(x, s) for x, s in zip(xs, ss) if x is not None])
-            xs, ss = np.array(xs), np.array(ss)
-            n_p = len(xs)
-        else:
-            n_p = 0
-
-        if n_p > 0:
-            # Pieces of gradient
-            sigmoids = sigmoid_array(self.w_1 * ss + self.w_0)
-            sigminus = np.ones(n_p) - sigmoids
-            sigmoids_x = np.multiply(xs, sigmoids)
-            sigmoids_x_sigminus = np.multiply(sigmoids_x, sigminus)
-            sigmoids_sigminus = np.multiply(sigmoids, sigminus)
-            sum_sigmoids = np.sum(sigmoids)
-            sum_sigmoids_x = np.sum(sigmoids_x)
-            yhat = 1/(n_p + 1) * (self.mean_block[0][y] - 1/self.n) + n_p/(n_p + 1) * sum_sigmoids_x/sum_sigmoids
-            first_chunk = 1/yhat
-
-            # Compute gradient
-            dldw0 = -first_chunk * (sum_sigmoids * np.sum(sigmoids_x_sigminus) - sum_sigmoids_x * np.sum(sigmoids_sigminus)) / np.square(sum_sigmoids)
-            dldw1 = -first_chunk * (sum_sigmoids * np.sum(np.multiply(sigmoids_x_sigminus, ss)) - sum_sigmoids_x * np.sum(np.multiply(sigmoids_sigminus, ss))) / np.square(sum_sigmoids)
-
-            # Update weights
-            self.w_0 = self.w_0 - self.alpha * (dldw0 - 2 * self.w_0 * self.beta)
-            self.w_1 = self.w_1 - self.alpha * (dldw1 - 2 * self.w_1 * self.beta)
-
-            # Compute and return loss
-            loss = -np.log(yhat)
-            if loss is np.nan:
-                raise ValueError("Invalid loss from categorical predictor")
+        if not self.done_updating:
+            if self.condition_dict[ID] is None:
+                return None
             else:
+                y = np.argmax(self.condition_dict[ID]) # Only the index of the correct one matters here
+
+            xs = [self.condition_dict[item][0][y] if self.condition_dict[item] is not None else None for item in IDs] # Get values for similar proteins
+            if sum(x is not None for x in xs) > 0:
+                xs, ss = zip(*[(x, s) for x, s in zip(xs, ss) if x is not None])
+                xs, ss = np.array(xs), np.array(ss)
+                n_p = len(xs)
+            else:
+                n_p = 0
+
+            if n_p > 0:
+                # Pieces of gradient
+                sigmoids = sigmoid_array(self.w_1 * ss + self.w_0)
+                sigminus = np.ones(n_p) - sigmoids
+                sigmoids_x = np.multiply(xs, sigmoids)
+                sigmoids_x_sigminus = np.multiply(sigmoids_x, sigminus)
+                sigmoids_sigminus = np.multiply(sigmoids, sigminus)
+                sum_sigmoids = np.sum(sigmoids)
+                sum_sigmoids_x = np.sum(sigmoids_x)
+                yhat = 1/(n_p + 1) * (self.mean_block[0][y] - 1/self.n) + n_p/(n_p + 1) * sum_sigmoids_x/sum_sigmoids
+                first_chunk = 1/yhat
+
+                # Compute gradient
+                dldw0 = -first_chunk * (sum_sigmoids * np.sum(sigmoids_x_sigminus) - sum_sigmoids_x * np.sum(sigmoids_sigminus)) / np.square(sum_sigmoids)
+                dldw1 = -first_chunk * (sum_sigmoids * np.sum(np.multiply(sigmoids_x_sigminus, ss)) - sum_sigmoids_x * np.sum(np.multiply(sigmoids_sigminus, ss))) / np.square(sum_sigmoids)
+
+                # Update weights
+                self.w_0 = self.w_0 - self.alpha * (dldw0 - 2 * self.w_0 * self.beta)
+                self.w_1 = self.w_1 - self.alpha * (dldw1 - 2 * self.w_1 * self.beta)
+
+                self.w_0_history = np.roll(self.w_0_history, -1)
+                self.w_0_history[self.convergence_length - 1] = self.w_0
+                self.w_1_history = np.roll(self.w_1_history, -1)
+                self.w_1_history[self.convergence_length - 1] = self.w_1
+
+                if np.max(self.w_0_history) - np.min(self.w_0_history) < self.convergence_radius and np.max(self.w_1_history) - np.min(self.w_1_history) < self.convergence_radius:
+                    self.done_updating = True
+
+                # Compute and return loss
+                loss = -np.log(yhat)
+                if loss is np.nan:
+                    raise ValueError("Invalid loss from categorical predictor")
+                else:
+                    return loss
+            else:
+                loss = -np.log(self.mean_block[0][y] - 1/self.n)
                 return loss
         else:
-            loss = -np.log(self.mean_block[0][y] - 1/self.n)
-            return loss
+            return None
 
 # Continuous variables
 class Cont:
     # Initalize weights and store variables in a useful way
     def __init__(self, condition, metadata, alpha = 0.1, beta = 0.01, w_0 = -1, w_1 = -2, c = 5, done_updating = False):
+        self.condition = condition
         self.w_0 = w_0
         self.w_1 = w_1
         self.c = c
@@ -175,7 +193,7 @@ class Cont:
             loss = 1 - np.sum(1/(np.sqrt(2 * math.pi) * eta) * std_norm_exp(zs(np.arange(y-self.delta, y+self.delta * 101/100, self.delta / 100), xbar, eta)[0])) * self.delta / 100
 
         if loss > 1 or loss < 0:
-            raise ValueError("Loss error: out of bounds")
+            raise ValueError("Loss out of bounds for " + self.condition + " at " + str(loss_cont) + " with c=" + str(self.c))
         if loss is np.nan:
             raise ValueError("Invalid loss from continuous predictor")
 
@@ -185,6 +203,7 @@ class Contbin:
     # Initalize weights and store variables in a useful way
     def __init__(self, condition, metadata, alpha = 0.1, beta_cont = 0.01, beta_bin = 0, w_0_cont = -1, w_1_cont = -2, c = 5, w_0_bin = -1, w_1_bin = 3, done_updating = False):
         # Initialize continuous parameters
+        self.condition = condition
         self.w_0_cont = w_0_cont
         self.w_1_cont = w_1_cont
         self.c = c
@@ -298,7 +317,7 @@ class Contbin:
             loss_bin = -np.log(self.mean_block - y[1]/self.n)
 
         if loss_cont > 1.01 or loss_cont < -0.01:
-            raise ValueError("Loss error: out of bounds")
+            raise ValueError("Loss out of bounds for " + self.condition + " at " + str(loss_cont) + " with c=" + str(self.c))
         if loss_cont is np.nan:
             raise ValueError("Invalid loss from continuous predictor")
         if loss_bin is np.nan:
@@ -314,8 +333,9 @@ def std_norm_exp2d(x):
 
 class Bicontbin:
     # Initalize weights and store variables in a useful way
-    def __init__(self, condition, metadata, alpha = 0.01, beta_cont = 0.01, beta_bin = 0, w_10_cont = -1, w_11_cont = -2, c_1 = 5, w_20_cont = -1, w_21_cont = -2, c_2 = 5, w_0_bin = -1, w_1_bin = 3, done_updating = False):
+    def __init__(self, condition, metadata, alpha = 0.1, beta_cont = 0.01, beta_bin = 0, w_10_cont = -1, w_11_cont = -2, c_1 = 5, w_20_cont = -1, w_21_cont = -2, c_2 = 5, w_0_bin = -1, w_1_bin = 3, done_updating = False):
         # Initialize continuous parameters
+        self.condition = condition
         self.w_10_cont = w_10_cont
         self.w_11_cont = w_11_cont
         self.c_1 = c_1
@@ -468,7 +488,7 @@ class Bicontbin:
         if loss_cont is np.nan:
             raise ValueError("Invalid loss from continuous predictor")
         if loss_cont > 1.01 or loss_cont < -0.1:
-            raise ValueError("Loss error: out of bounds: " + str(loss_cont))
+            raise ValueError("Loss out of bounds for " + self.condition + " at " + str(loss_cont) + " with c_1=" + str(self.c_1) + " and c_2=" + str(self.c_2))
         if loss_bin is np.nan:
             raise ValueError("Invalid loss from categorical predictor")
 

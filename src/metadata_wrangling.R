@@ -1,3 +1,5 @@
+remove(list=ls())
+
 start.time = Sys.time()
 
 library(dplyr)
@@ -29,70 +31,70 @@ metadata$temp_details <- NULL
 metadata <- metadata %>% mutate(
   method = method %>% tolower()) %>% mutate(
     method = case_when(method == "vapor diffusion, hanging drop" ~ "vapor diffusion",
-              method == "vapor diffusion, sitting drop" ~ "vapor diffusion",
-              method == "vapor diffusion" ~ "vapor diffusion",
-              method == "evaporation" ~ "evaporation",
-              method == "microbatch" ~ "batch",
-              method == "lipidic cubic phase" ~ "lipidic cubic phase",
-              method == "batch mode" ~ "batch",
-              method == "hanging drop" ~ "vapor diffusion",
-              method == "microdialysis" ~ "microdialysis",
-              method == "small tubes" ~ "vapor diffusion", # Based on the structures that used this, it appears to just be vapor diffusion
-              method == "liquid diffusion" ~ "liquid diffusion",
-              method == "batch" ~ "batch",
-              method == "microbatch under oil" ~ "batch",
-              method == "vapor diffusion,sitting drop,nanodrop" ~ "vapor diffusion",
-              method == "counter-diffusion" ~ "counter diffusion",
-              method == "sitting drop" ~ "vapor diffusion",
-              method == "vapor diffusion, sitting drop, nanodrop" ~ "vapor diffusion",
-              method == "hanging drop vapor diffusion" ~ "vapor diffusion",
-              method == "batch method" ~ "batch",
-              method == "in cell" ~ "cell",
-              method == "hanging drop, vapor diffusion" ~ "vapor diffusion",
-              method == "evaporation, recrystallization" ~ "evaporation",
-              method == "sitting drop vapor diffusion" ~ "vapor diffusion",
-              method == "evaporation, hanging drop" ~ "evaporation",
-              method == "microbatch crystallization under oil" ~ "batch",
-              method == "slow cooling" ~ "cooling",
-              method == "modified microbatch" ~ "batch",
-              method == "microbach" ~ "batch",
-              method == "microbatch under paraffin oil" ~ "batch",
-              method == "sitting-drop vapor diffusion" ~ "vapor diffusion",
-              method == "microbatch, under oil" ~ "batch",
-              method == "batch crystallization" ~ "batch",
-              method == "oil microbatch" ~ "batch",
-              method == "microbatch underoil" ~ "batch",
-              method == "sitting drop vapor diffuction" ~ "vapor diffusion",
-              method == "under oil" ~ "batch",
-              method == "cubic lipid phase" ~ "lipidic cubic phase",
-              method == "oil batch" ~ "batch",
-              method == "vapour diffusion, hanging drop" ~ "vapor diffusion",
-              method == "dialysis" ~ "dialysis",
-              method == "sitting drop, vapor diffusion" ~ "vapor diffusion",
-              method == "counter diffusion" ~ "counter diffusion",
-              method == "lipidic cubic phase (lcp)" ~ "lipidic cubic phase",
-              method == "microseeding" ~ "seeding",
-              method == "macroseeding" ~ "seeding",
-              method == "soaking" ~ "soaking",
-              method == "microbatch crystallization" ~ "batch",
-              method == "microbatch technique under oil" ~ "batch",
-              method == "microfluidic" ~ "microfluidic",
-              method == "capillary counterdiffusion" ~ "counter diffusion",
-              grepl("vapor", method) ~ "vapor diffusion",
-              grepl("batch", method) ~ "batch",
-              grepl("evaporation", method) ~ "evaporation",
-              grepl("lipid", method) ~ "lipidic cubic phase",
-              grepl("lcp", method) ~ "lipidic cubic phase",
-              grepl("oil", method) ~ "batch",
-              grepl("dialysis", method) ~ "microdialysis",
-              grepl("liquid diffusion", method) ~ "liquid diffusion",
-              grepl("dialysis", method) ~ "microdialysis",
-              grepl("cooling", method) ~ "cooling",
-              grepl("capillary", method) ~ "counter diffusion",
-              method == "" ~ NA_character_,
-              is.na(method) ~ NA_character_,
-              TRUE ~ "other")
-)
+                       method == "vapor diffusion, sitting drop" ~ "vapor diffusion",
+                       method == "vapor diffusion" ~ "vapor diffusion",
+                       method == "evaporation" ~ "evaporation",
+                       method == "microbatch" ~ "batch",
+                       method == "lipidic cubic phase" ~ "lipidic cubic phase",
+                       method == "batch mode" ~ "batch",
+                       method == "hanging drop" ~ "vapor diffusion",
+                       method == "microdialysis" ~ "microdialysis",
+                       method == "small tubes" ~ "vapor diffusion", # Based on the structures that used this, it appears to just be vapor diffusion
+                       method == "liquid diffusion" ~ "liquid diffusion",
+                       method == "batch" ~ "batch",
+                       method == "microbatch under oil" ~ "batch",
+                       method == "vapor diffusion,sitting drop,nanodrop" ~ "vapor diffusion",
+                       method == "counter-diffusion" ~ "counter diffusion",
+                       method == "sitting drop" ~ "vapor diffusion",
+                       method == "vapor diffusion, sitting drop, nanodrop" ~ "vapor diffusion",
+                       method == "hanging drop vapor diffusion" ~ "vapor diffusion",
+                       method == "batch method" ~ "batch",
+                       method == "in cell" ~ "cell",
+                       method == "hanging drop, vapor diffusion" ~ "vapor diffusion",
+                       method == "evaporation, recrystallization" ~ "evaporation",
+                       method == "sitting drop vapor diffusion" ~ "vapor diffusion",
+                       method == "evaporation, hanging drop" ~ "evaporation",
+                       method == "microbatch crystallization under oil" ~ "batch",
+                       method == "slow cooling" ~ "cooling",
+                       method == "modified microbatch" ~ "batch",
+                       method == "microbach" ~ "batch",
+                       method == "microbatch under paraffin oil" ~ "batch",
+                       method == "sitting-drop vapor diffusion" ~ "vapor diffusion",
+                       method == "microbatch, under oil" ~ "batch",
+                       method == "batch crystallization" ~ "batch",
+                       method == "oil microbatch" ~ "batch",
+                       method == "microbatch underoil" ~ "batch",
+                       method == "sitting drop vapor diffuction" ~ "vapor diffusion",
+                       method == "under oil" ~ "batch",
+                       method == "cubic lipid phase" ~ "lipidic cubic phase",
+                       method == "oil batch" ~ "batch",
+                       method == "vapour diffusion, hanging drop" ~ "vapor diffusion",
+                       method == "dialysis" ~ "dialysis",
+                       method == "sitting drop, vapor diffusion" ~ "vapor diffusion",
+                       method == "counter diffusion" ~ "counter diffusion",
+                       method == "lipidic cubic phase (lcp)" ~ "lipidic cubic phase",
+                       method == "microseeding" ~ "seeding",
+                       method == "macroseeding" ~ "seeding",
+                       method == "soaking" ~ "soaking",
+                       method == "microbatch crystallization" ~ "batch",
+                       method == "microbatch technique under oil" ~ "batch",
+                       method == "microfluidic" ~ "microfluidic",
+                       method == "capillary counterdiffusion" ~ "counter diffusion",
+                       grepl("vapor", method) ~ "vapor diffusion",
+                       grepl("batch", method) ~ "batch",
+                       grepl("evaporation", method) ~ "evaporation",
+                       grepl("lipid", method) ~ "lipidic cubic phase",
+                       grepl("lcp", method) ~ "lipidic cubic phase",
+                       grepl("oil", method) ~ "batch",
+                       grepl("dialysis", method) ~ "microdialysis",
+                       grepl("liquid diffusion", method) ~ "liquid diffusion",
+                       grepl("dialysis", method) ~ "microdialysis",
+                       grepl("cooling", method) ~ "cooling",
+                       grepl("capillary", method) ~ "counter diffusion",
+                       method == "" ~ NA_character_,
+                       is.na(method) ~ NA_character_,
+                       TRUE ~ "other")
+  )
 
 # 237 other remaining, 140494 of 140731 (99.8%) classified
 
@@ -138,7 +140,14 @@ metadata$pdbx_phrange <- NULL
 # Extract chemical conditions #
 ###############################
 
+stored_pdbx_details = metadata$pdbx_details
+
 # 134372 initially have conditions
+
+# NA pdbx_details with no numerics or with conditions in a problematic order
+# 127389 (94.8%) remain
+metadata$pdbx_details <- ifelse(grepl("[0-9]", metadata$pdbx_details, perl = T), 
+                                ifelse(grepl(pattern = "^[0-9]", metadata$pdbx_details, perl = T), metadata$pdbx_details, NA), NA)
 
 # Functions to deal with ranges
 process_dash <- function(x) {
@@ -165,7 +174,7 @@ process_to <- function(x) {
 }
 
 # Initial text cleaning
-exclude_words = c(" with", "in", "per", "system", "a", "well", "fragment", "compound", "saturated", "and", "of", "at ")
+exclude_words = c(" with", "in", "per", "system", "a", "well", "fragment", "this", "compound", "saturated", "and", "hcl", "hydrochloride", "dibasic", "monobasic", "tribasic", "naoh", "koh", "of", "at ")
 metadata = metadata %>%
   mutate(
     pdbx_details = pdbx_details %>% 
@@ -173,6 +182,7 @@ metadata = metadata %>%
       gsub(pattern="\\\n", replacement=" ") %>% 
       gsub(pattern=", ", replacement=" ") %>%
       gsub(pattern="\\: ", replacement=" ") %>% 
+      gsub(pattern="_", replacement=" ") %>% 
       gsub(pattern="\\;", replacement=" ") %>% 
       gsub(pattern="\\(", replacement="") %>%
       gsub(pattern="\\)", replacement="") %>%
@@ -180,6 +190,7 @@ metadata = metadata %>%
       gsub(pattern="\\&", replacement=" and ") %>% 
       gsub(pattern="\\+", replacement=" and ") %>%
       gsub(pattern=" -- ", replacement=" ") %>% 
+      gsub(pattern="\\*", replacement=" ") %>% 
       gsub(pattern=" -", replacement="-") %>% 
       gsub(pattern="- ", replacement="-") %>% 
       gsub(pattern="\\.$", replacement="") %>% 
@@ -187,8 +198,15 @@ metadata = metadata %>%
       gsub(pattern="\\]", replacement=" ") %>% 
       gsub(pattern="   ", replacement = " ") %>%
       gsub(pattern="  ", replacement = " ") %>%
+      gsub(pattern="\\/sodium hydroxide", replacement = "") %>%
+      gsub(pattern="\\/hydrochloric acid", replacement = "") %>%
+      gsub(pattern="[0-9][ \\-]h2o", replacement = " ") %>%
+      gsub(pattern="[0-9]*\\(h2o\\)[0-9]*", replacement = " ") %>%
       gsub(pattern="[ ]*percent", replacement = "\\%", perl = T) %>%
       gsub(pattern="\\%(?=[a-z])", replacement = "% ", perl = TRUE) %>%
+      gsub(pattern="\\-hcl|\\:hcl|\\/hcl", replacement = "", perl = TRUE) %>%
+      gsub(pattern="\\-naoh|\\:naoh|\\/naoh", replacement = "", perl = TRUE) %>%
+      gsub(pattern="\\-koh|\\:koh|\\/koh", replacement = "", perl = TRUE) %>%
       gsub(pattern="microliter|microliters|microlitre|microlitres|mikroliter|micro\\-liter|micro\\-liters|micoliter|micro\\-l", replacement = "ul", perl = T) %>%
       gsub(pattern="milliliter|milliliters", replacement = "ml", perl = T) %>%
       gsub(pattern="nanoliter|nanoliters|nanolitre", replacement = "nl", perl = T) %>%
@@ -200,13 +218,16 @@ metadata = metadata %>%
       gsub(pattern="microgram|micrograms", replacement = "ug", perl = T) %>%
       gsub(pattern="gram|grams", replacement = "mg", perl = T) %>%
       gsub(pattern="microl", replacement = "ul", perl = T) %>%
-      gsub(pattern=",000", replacement = "000", perl = T) %>%
-      gsub(pattern="0,0", replacement = "0.0", perl = T) %>%
+      gsub(pattern="sulphate", replacement = "sulfate", perl = T) %>%
+      gsub(pattern="(?<=[0-9]),(?=[0-9]{3})", replacement="", perl = TRUE) %>%
+      gsub(pattern="(?<=[0-9][0-9]),(?=[0-9]{3})", replacement="", perl = TRUE) %>%
       gsub(pattern="(?<=[0-9]) *(?=%)", replacement = "", perl = T) %>%
       gsub(pattern = paste0(exclude_words, collapse = " | "), replacement = " ", perl = T) %>%
       gsub(pattern="4 po\\/oh", replacement="4-pooh", perl = T) %>%
       gsub(pattern="4 eo\\/oh", replacement="4-eooh", perl = T) %>%
       gsub(pattern="polyethylene glycol", replacement = "peg", perl = TRUE) %>%
+      gsub(pattern="poly ethylene glycol", replacement = "peg", perl = TRUE) %>%
+      gsub(pattern="monomethyl[- ]peg", replacement = "peg mme", perl = TRUE) %>%
       gsub(pattern="monomethyl ether", replacement = "mme", perl = TRUE) %>%
       gsub(pattern="(?<=peg) *peg", replacement = "", perl = TRUE) %>%
       gsub(pattern="(?<=mme) *mme", replacement = "", perl = TRUE) %>%
@@ -215,21 +236,15 @@ metadata = metadata %>%
       gsub(pattern="peg([0-9][0-9\\%]*) mme", replacement = "peg mme\\1 ", perl = TRUE) %>%
       gsub(pattern="peg([0-9][0-9\\%]*)mme", replacement = "peg mme\\1 ", perl = TRUE) %>%
       gsub(pattern="(?<=peg)[ \\-](?=[0-9][0-9]*[^\\%])", replacement = "", perl = TRUE) %>%
-      gsub(pattern="(?<=peg[0-9]),(?=[0-9]{3})", replacement="", perl = TRUE) %>% # Remove commas separating groups of 3 digits
-      gsub(pattern="(?<=peg[0-9][0-9]),(?=[0-9]{3})", replacement="", perl = TRUE) %>%
       gsub(pattern="(?<=peg)([0-9]*?)k", replacement = "\\1000", perl = TRUE) %>%
-      gsub(pattern="(?<=mme)[ \\-](?=[0-9])", replacement = "", perl = TRUE) %>%
-      gsub(pattern="(?<=mme[0-9]),(?=[0-9]{3})", replacement="", perl = TRUE) %>% # Remove commas separating groups of 3 digits
-      gsub(pattern="(?<=mme[0-9][0-9]),(?=[0-9]{3})", replacement="", perl = TRUE) %>%
+      gsub(pattern="(?<=peg mme)[ \\-](?=[0-9])", replacement = "", perl = TRUE) %>%
       gsub(pattern="(?<=mme)([0-9]*?)k", replacement = "\\1000", perl = TRUE) %>%
       gsub(pattern="(?<=glycol)[ \\-](?=[0-9]{3})", replacement = "", perl = TRUE) %>%
       gsub(pattern="(?<=ether)[ \\-](?=[0-9])", replacement = "", perl = TRUE) %>%
-      gsub(pattern="(?<=me)[ \\-](?=[0-9])", replacement = "", perl = TRUE) %>%
+      gsub(pattern="(?<=peg me)[ \\-](?=[0-9])", replacement = "", perl = TRUE) %>%
       gsub(pattern="(?<= ph) (?=[0-9])", replacement = "", perl = TRUE) %>%
       gsub(pattern="(?<= ph)=(?=[0-9])", replacement = "", perl = TRUE) %>%
       gsub(pattern="^ph (?=[0-9])", replacement = "ph", perl = TRUE) %>%
-      gsub(pattern=" ph[0-9][0-9\\.\\-]*", replacement = "", perl = TRUE) %>%
-      gsub(pattern="^ph[0-9][0-9\\.\\-]*", replacement = "", perl = TRUE) %>%
       gsub(pattern="temperature [0-9\\.]{3,}k", replacement = "", perl = TRUE) %>%
       gsub(pattern="[0-9\\.]{3,}k", replacement = "", perl = TRUE) %>%
       gsub(pattern = "vapor diffusion hanging drop", replacement = "") %>%
@@ -254,18 +269,23 @@ metadata = metadata %>%
       gsub(pattern=" -", replacement="-") %>% 
       gsub(pattern="- ", replacement="-") %>% 
       gsub(pattern="\\.$", replacement="", perl = T) %>% 
-      gsub(pattern="([^0-9])\\.([^0-9])", replacement="", perl = T) %>% 
-      gsub(pattern="\\%([^ ])", replacement="\\% ", perl = T) %>% 
+      gsub(pattern="([^0-9])\\.([^0-9])", replacement="\\1 \\2", perl = T) %>% 
+      gsub(pattern="\\%([^ ])", replacement="\\% \\1", perl = T) %>% 
       gsub(pattern="peg[ \\-]([0-9][0-9]*)[ \\-]mme", replacement = "peg mme\\1 ", perl = TRUE) %>%
       gsub(pattern="peg[ \\-]([0-9][0-9]*)mme", replacement = "peg mme\\1 ", perl = TRUE) %>%
       gsub(pattern="peg([0-9][0-9]*)[ \\-]mme", replacement = "peg mme\\1 ", perl = TRUE) %>%
       gsub(pattern="peg([0-9][0-9]*)mme", replacement = "peg mme\\1 ", perl = TRUE) %>%
       gsub(pattern="pegmme", replacement = "peg mme", perl = TRUE) %>%
       gsub(pattern="mme peg", replacement = "peg mme", perl = TRUE) %>%
+      gsub(pattern="peg000", replacement = "", perl = TRUE) %>%
+      gsub(pattern=" [^\\s]*hydrate[^\\s]* | [^\\s]*hydrate$", replacement = " ", perl = TRUE) %>%
+      gsub(pattern="([0-9])\\. |([0-9])\\.$", replacement = "\\1 ", perl = TRUE) %>%
+      gsub(pattern = "([0-9\\.]*[0-9\\.])([a-z%])", replacement = "\\1 \\2", perl = T) %>%
+      gsub(pattern = "(peg[0-9]+) ([0-9\\.]+[ ]*\\%$)", replacement = "\\2 \\1", perl = T) %>%
+      gsub(pattern = paste0(exclude_words, collapse = " | "), replacement = " ", perl = T) %>%
       gsub(pattern="   ", replacement = " ") %>%
       gsub(pattern="  ", replacement = " ") %>%
-      gsub(pattern=" $", replacement = "") %>%
-      gsub(pattern = "([0-9\\.]*[0-9\\.])([a-z%])", replacement = "\\1 \\2", pdbx_details, perl = T),
+      gsub(pattern=" $", replacement = ""),
   ) %>%
   mutate(
     pdbx_details = case_when(pdbx_details == "" ~ NA_character_,
@@ -282,10 +302,24 @@ metadata = metadata %>%
       gsub(pattern = "([0-9])NA", replacement = "\\1")
   )
 
-# 134153 (99.8% of the original) are non-NA after the initial text cleaning
+# If p_h is NA and the details have a pH, use that (salvages 6777 (5.2%) pH values)
+ph_replacement = ifelse(grepl(".*ph([0-9\\.]+).*", metadata$pdbx_details), gsub(".*ph([0-9\\.]+).*", "\\1", metadata$pdbx_details), NA) %>% as.numeric()
+metadata$p_h <- case_when(ph_replacement > 14 | ph_replacement < -2 ~ metadata$p_h,
+                          is.na(metadata$p_h) ~ ph_replacement,
+                          TRUE ~ metadata$p_h)
+metadata$pdbx_details = metadata$pdbx_details %>%
+  gsub(pattern=" ph[0-9][0-9\\.\\-]*[,]*", replacement = " ", perl = TRUE) %>%
+  gsub(pattern="^ph[0-9][0-9\\.\\-]*[,]*", replacement = " ", perl = TRUE)
+
+# 127388 (94.8% of the original) are non-NA after the initial text cleaning
 
 # Begin processing each condition
-# 447006 conditions present
+
+# NA pdbx_details with no numerics
+# 120933 (90.0%) remain
+metadata$pdbx_details <- ifelse(grepl("\\s+(?=[0-9\\.]* )", metadata$pdbx_details, perl = T), metadata$pdbx_details, NA)
+
+# 429102 conditions present
 conditions_list = metadata$pdbx_details %>% str_split("\\s+(?=[0-9\\.]* )")
 
 # Remove conditions with no number (can't determine concentration)
@@ -295,10 +329,7 @@ remove_non_numeric <- function(x) {
 
 conditions_list <- lapply(conditions_list, remove_non_numeric)
 
-# 417898 (93.5%) conditions remain after removing non-numeric
-
-# For determining how many proteins keep all their conditions
-num_conditions_each = lapply(conditions_list, (function(x) length(x[!is.na(x)]))) %>% unlist() 
+# 389088 (90.7%) conditions remain after removing non-numeric
 
 # Remove conditions with no units (or only units but no condition)
 units_vec <- c(" % w\\/w", "% w\\/v", "% v\\/v", "w\\/w", "w\\/v", "v\\/v", "\\/v", "% \\/v", "%", "m", "mm", "mg", "mg\\/ml", "ul", "ml", "um", "nl ")
@@ -309,7 +340,13 @@ remove_no_units <- function(x) {
 
 conditions_list <- lapply(conditions_list, remove_no_units)
 
-# 404838 (90.6%) conditions remain after removing no units
+# For determining how many proteins keep all their conditions
+num_conditions_each = lapply(conditions_list, (function(x) length(x[!is.na(x)]))) %>% unlist() 
+
+metadata$pdbx_details <- ifelse(unlist(lapply(conditions_list, length))>0, metadata$pdbx_details, NA)
+# 120914 (90.0%) remain non-NA
+
+# 382354 (89.1%) conditions remain after removing no units
 
 # Function to extract conditions
 get_conditions <- function(x) {
@@ -325,12 +362,12 @@ get_conditions <- function(x) {
 }
 
 # Common words to remove
-end_line1 <- c("^ solution", "buffer", "the", "to", "containing", "against", "screen", "condition", "concentration", "was", "were", "mixed", "crystals", "for", "a", "soaked", "by", "well", "w/v", "added", "ph", "stock", "nanodrop", "crystal$ ")
-end_line1 <- paste0(c(paste0(gsub("\\$| ", "", end_line1, perl = T), collapse = " .*|^"), paste0(gsub("\\$|\\^", "", end_line1, perl = T), collapse = " .*| "), paste0(gsub("\\^| ", "", end_line1), collapse = "$| ")), collapse = ".*| ")
-end_line2 <- c("^ reservoir", "microbatch", "ratio", "as", "1:1", "crystallization", "drop", "precipitant", "under", "equal", "temperature", "or", "from", "an", "each", "batch", "contained", "after", "v/v", "/", "volume", "diffusion$ ")
-end_line2 <- paste0(c(paste0(gsub("\\$| ", "", end_line2, perl = T), collapse = " .*|^"), paste0(gsub("\\$|\\^", "", end_line2), collapse = " .*| "), paste0(gsub("\\^| ", "", end_line2), collapse = "$| ", perl = T)), collapse = ".*| ")
-end_line3 <- c("^ using", "supplemented", "evaporation", "over", "method", "then", "soaking", "mg/ml", "plus", "final", "equilibrated", "tray", "=", "drops", "complex", "mix", "mixture", "additive", "incubated", "room", "mg", "before$ ")
-end_line3 <- paste0(c(paste0(gsub("\\$| ", "", end_line3, perl = T), collapse = " .*|^"), paste0(gsub("\\$|\\^", "", end_line3), collapse = " .*| "), paste0(gsub("\\^| ", "", end_line3), collapse = "$| ", perl = T)), collapse = ".*| ")
+end_line1 <- c("^ solution", "buffer", "the", "to", "containing", "along", "against", "screen", "condition", "concentration", "was", "were", "mixed", "crystals", "for", "a", "soaked", "by", "well", "added", "ph", "stock", "nanodrop", "crystal$ ")
+end_line1 <- paste0(c(paste0(gsub("\\$| ", "", end_line1, perl = T), collapse = " .*|^"), paste0(gsub("\\$|\\^", "", end_line1, perl = T), collapse = " .*| "), paste0(gsub("\\^| ", "", end_line1, perl = T), collapse = "$| ")), collapse = ".*| ")
+end_line2 <- c("^ reservoir", "microbatch", "ratio", "as", "1:1", "base", "crystallization", "drop", "di", "tri", "precipitant", "under", "equal", "temperature", "or", "from", "an", "each", "batch", "contained", "after", "volume", "stored", "diffusion$ ")
+end_line2 <- paste0(c(paste0(gsub("\\$| ", "", end_line2, perl = T), collapse = " .*|^"), paste0(gsub("\\$|\\^", "", end_line2, perl = T), collapse = " .*| "), paste0(gsub("\\^| ", "", end_line2, perl = T), collapse = "$| ")), collapse = ".*| ")
+end_line3 <- c("^ using", "supplemented", "ratio", "evaporation", "over", "method", "then", "soaking", "plus", "final", "equilibrated", "tray", "=", "drops", "complex", "mix", "mixture", "additive", "incubated", "room", "all", "grown", "before$ ")
+end_line3 <- paste0(c(paste0(gsub("\\$| ", "", end_line3, perl = T), collapse = " .*|^"), paste0(gsub("\\$|\\^", "", end_line3, perl = T), collapse = " .*| "), paste0(gsub("\\^| ", "", end_line3, perl = T), collapse = "$| ")), collapse = ".*| ")
 
 process_conditions <- function(x) {
   x %>% 
@@ -354,11 +391,10 @@ conditions <- lapply(conditions_list, get_conditions) %>% lapply(FUN = process_c
 # List of conditions to possibly add
 pos_add <- names(conditions %>% unlist() %>% table() %>% sort(decreasing = T))
 names(pos_add) <- pos_add
-# 16905 terms to possibly add
+# 13013 terms to possibly add
 
 # Read renamed conditions from tsv and replace
 replacement_tmp <- read.table("metadata/renamed.tsv", sep = "\t", header = T)
-replacement_tmp <- replacement_tmp[1:498,]
 colnames(replacement_tmp) <- c("original", "replacement")
 replacement_vec <- replacement_tmp$replacement
 names(replacement_vec) <- replacement_tmp$original
@@ -371,7 +407,6 @@ replace_conditions <- function(x) {
 
 # ~2000 items per second
 conditions <- lapply(conditions, replace_conditions)
-# 357020 of 404838 conditions (88.1%, non-unique) directly replaced
 
 # Replaces original with renamed values
 units_sub <- units_vec
@@ -479,21 +514,16 @@ new_cols <- conditions_list_parsed %>%
   sort(decreasing = T) %>%
   names()
 
-# Prevent different units from adding columns of the same condition; drops 5578 (1.4%) observations
+# Prevent different units from adding columns of the same condition
 new_cols <- new_cols[!duplicated(gsub(" \\(.*", "", new_cols))]
 
 # Add more than eventually  keeping since some will be merged
 # Get extra bicontinuous variables
 new_cols <- sort(c(new_cols[!grepl("^peg.* \\(%\\)|^peg mme[0-9][0-9]* \\(%\\)|^mpeg[0-9][0-9]* \\(%\\)", new_cols)][1:97], new_cols[grepl("^peg[0-9][0-9]* \\(%\\)|^peg mme[0-9][0-9]* \\(%\\)|^mpeg[0-9][0-9]* \\(%\\)", new_cols)]))
 
-# 16162 unique "conditions" identified at this level accounting for 396541 actual observations
-# Using 100 columns including the peg columns accounts for 331260 (83.5%) observations, and further columns each have a very limited effect
-# Columns beyond 100 have fewer than 236 occurrences of the crystallization condition per column
-# (< 0.06% of total occurrences per additional column)
-
 metadata[,new_cols] <- 0
 
-# Get units frome each column
+# Get units from each column
 tmp1 <- strsplit(colnames(metadata)[-(1:6)], " (?!.* )", perl = TRUE)
 colname_units <- sapply(tmp1,`[`,2) %>% 
   strsplit(split = "\\(") %>% 
@@ -575,7 +605,7 @@ bound <- function(x) {
 }
 
 bound_bicont <- function(x) {
-  tmp <- str_split(metadata$`peg (%)`, " , ", simplify = T)
+  tmp <- str_split(x, " , ", simplify = T)
   tmp <- matrix(as.numeric(tmp), ncol = ncol(tmp))
   return(bound(tmp[,1]) & bound(tmp[,2]))
 }
@@ -596,18 +626,20 @@ threshold <- function(x) {
 }
 metadata[,5:106] <- data.frame(lapply(metadata[,5:106], threshold), check.names = F)
 
+metadata$pdbx_details <- stored_pdbx_details
+
 # Write metadata to file
 write.table(metadata, "metadata/metadata_parsed_100.tsv", sep = "\t", row.names = F, quote=T)
 
-mean((num_full[1:i]==num_conditions_each[1:i])[num_conditions_each!=0], na.rm = T)
-# 82936 (63.5%) proteins with all their numeric crystallization conditions in the final table
+mean((num_full==num_conditions_each)[num_conditions_each!=0], na.rm = T)
+# 81645 (67.5% of possible) proteins with all their numeric crystallization conditions in the final table
 
 # Write encodings to a new file
 encodings <- data.frame(name=colnames(metadata), encoding=c(NA, NA, NA, "cat", "cont", "cont", 
-                                         ifelse(grepl("^peg \\(%\\)|^peg mme \\(%\\)|^mpeg \\(%\\)", 
-                                                      colnames(metadata[7:length(colnames(metadata))])), 
-                                                "bicontbin", 
-                                                "contbin")))
+                                                            ifelse(grepl("^peg \\(%\\)|^peg mme \\(%\\)|^mpeg \\(%\\)", 
+                                                                         colnames(metadata[7:length(colnames(metadata))])), 
+                                                                   "bicontbin", 
+                                                                   "contbin")))
 
 write.table(encodings, "metadata/encodings_100.tsv", sep = "\t", row.names = F, quote=T)
 
