@@ -30,6 +30,10 @@ parser.add_argument("--output-file", help="specific output file", default = "")
 parser.add_argument("--stop-early", help="stop early if converged", type=float, default=0)
 parser.add_argument("--threads", help="threads to train on", default = 4, type=int)
 parser.add_argument("--alpha", help="alpha", default=0.1, type=float)
+parser.add_argument("--beta-cont", help="regularization for continuous parameters", default=0, type=float)
+parser.add_argument("--beta-bin", help="regularization for binary parameters", default=0, type=float)
+parser.add_argument("--convergence-radius", help="distance between max and min in recent training history at which to end training early", default=0.1, type=float)
+parser.add_argument("--convergence-length", help="number of training iterations over which to test the convergence radius", default=20000, type=int)
 parser.add_argument("--seed", help="random seed", default=1, type=int)
 parser.add_argument("--save-freq", help="save frequency", default=100, type=int)
 args = parser.parse_args()
@@ -44,6 +48,7 @@ output_file = args.output_file
 stop_early = args.stop_early
 seed = args.seed
 save_freq = args.save_freq
+alpha=args.alpha
 
 out_dir = "/" + out_dir.strip("/") + "/"
 if not os.path.isdir(out_dir):
@@ -97,21 +102,21 @@ else:
         encodings_tmp = pd.read_csv(encodings, sep='\t')
         input_list = [(condition, encoding) for condition, encoding in zip(encodings_tmp['name'].tolist(), encodings_tmp['encoding'].tolist()) if encoding is not np.nan]
         def load_encodings(condition, encoding):
-            return (condition, get_encoding(encoding, condition, df))
+            return (condition, get_encoding(encoding, condition, df, args.beta_cont, args.beta_bin, args.convergence_radius, args.convergence_length, alpha))
         with mp.Pool(processes = threads) as p:
             weights = dict(p.starmap(load_encodings, input_list))
         del encodings_tmp
     else:
         raise ValueError("No encodings provided")
 
-def train_parallel(IDs, n):
+def train_parallel(IDs, n, new_alpha):
     global weights
     input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
     result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
 
     if result == "":
         n_p = 0
-        return None, False
+        return [], False
     else:
         IDs, searches, ss = zip(*[map(item.split("\t").__getitem__, [0,1,2]) for item in result.split("\n")[:-1]])
         IDs, searches, ss = [ID.split('/')[-1].split('.')[0] for ID in IDs], [ID.split('/')[-1].split('.')[0] for ID in searches], list(ss)
@@ -131,8 +136,10 @@ def train_parallel(IDs, n):
             n_p = len(IDs_cur)
 
             ss_cur = 1 - np.array(ss_cur, dtype = 'f')
+            loss = []
             for key in weights:
-                loss = weights[key].update(item, IDs_cur, ss_cur, n_p)
+                loss.append(weights[key].update(item, IDs_cur, ss_cur, n_p))
+                weights[key].set_alpha(new_alpha)
                 all_done = all_done and weights[key].done_updating
 
             all_loss.append(loss)
@@ -141,15 +148,17 @@ def train_parallel(IDs, n):
 print("Beginning training...")
 
 def view_weights():
-    for _, value in weights.items():
+    for key, value in weights.items():
         try:
-            print(value.w_0)
+            print(key + ": w_0_bin:" + str(value.w_0_bin) + ", w_1_bin: " + str(value.w_1_bin) + ", w_10: " + str(value.w_10_cont) + ", w_11: " + str(value.w_11_cont) + ", c_1: " + str(value.c_1) + ", w_20: " + str(value.w_20_cont) + ", w_21: " + str(value.w_21_cont) + ", c_2: " + str(value.c_2) + ", eta_1: " + str(value.eta_1) + ", eta_2: " + str(value.eta_2))
         except:
             try:
-                print(value.c)
+                print(key + ": w_0_bin:" + str(value.w_0_bin) + ", w_1_bin: " + str(value.w_1_bin) + ", w_0_cont: " + str(value.w_0_cont) + ", w_1_cont: " + str(value.w_1_cont) + ", c: " + str(value.c) + ", eta: " + str(value.eta))
             except:
-                print(value.c_1)
-                print(value.c_2)
+                try:
+                    print(key + ": w_0:" + str(value.w_0) + ", w_1: " + str(value.w_1) + ", c: " + str(value.c) + ", eta: " + str(value.eta))
+                except:
+                    print(key + ": w_0:" + str(value.w_0) + ", w_1: " + str(value.w_1))
 
 if output_file == "":
     output_file = "training.log"
@@ -174,10 +183,11 @@ for i in range(epochs):
     numbers = rng.choice(n + 1, size = n + 1, replace = False)
     IDs = df['seq_ID'][numbers].tolist()
 
-    batches = [IDs[i:i+threads] for i in range(0, len(all_IDs), 3)]
+    batches = [IDs[i:i+threads] for i in range(0, len(IDs), 3)]
     for j, batch in enumerate(batches):
-        all_loss, all_done = train_parallel(batch, n)
-        print("Iteration: " + str(i) + " IDs: " + " ".join(IDs))
+        new_alpha = ((1 - i / epochs) - (1 - j / len(batches))/epochs) * alpha
+        all_loss, all_done = train_parallel(batch, n, new_alpha)
+        print("Epoch: " + str(i) + " Iteration: " + str(j) + " IDs: " + " ".join(batch))
 
         if all_loss is not None:
             with open(out_dir + output_file, 'a') as f:
