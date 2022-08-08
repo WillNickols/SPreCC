@@ -121,6 +121,34 @@ class Cat:
             # If done training
             return None
 
+    def evaluate(self, ID, IDs, ss, n_p, CI): # CI not used for anything but allows general calling of the evaluation function
+        if self.condition_dict[ID] is None:
+            y = np.nan
+        else:
+            y = np.argmax(self.condition_dict[ID]) # Only the index of the correct one matters here
+
+        xs = [self.condition_dict[item][0] if self.condition_dict[item] is not None else None for item in IDs] # Get values for similar proteins
+        if sum(x is not None for x in xs) > 0:
+            xs, ss = zip(*[(x, s) for x, s in zip(xs, ss) if x is not None])
+            xs, ss = np.array(xs), np.array(ss)
+            n_p = len(xs)
+        else:
+            n_p = 0
+
+        if n_p > 0:
+            sigmoids = sigmoid_array(self.w_1 * ss + self.w_0)
+            sigmoids_x = np.multiply(xs.T, sigmoids).T
+            sum_sigmoids = np.sum(sigmoids)
+            sum_sigmoids_x = np.sum(sigmoids_x, axis=0)
+            tmp_mean_block = self.mean_block[0]
+            tmp_mean_block[y]  = tmp_mean_block[y] - 1/self.n
+            yhat = 1/(n_p + 1) * (tmp_mean_block) + n_p/(n_p + 1) * sum_sigmoids_x/sum_sigmoids
+            return y, yhat, n_p
+        else:
+            tmp_mean_block = self.mean_block[0]
+            tmp_mean_block[y]  = tmp_mean_block[y] - 1/self.n
+            return y, tmp_mean_block, n_p
+
 # Continuous variables
 class Cont:
     # Initalize weights and store variables in a useful way
@@ -224,7 +252,7 @@ class Cont:
             else:
                 loss = 1 - np.sum(1/(np.sqrt(2 * math.pi) * eta) * std_norm_exp(zs(np.arange(y * 0.9, y * 1.102, y / 100), xbar, eta)[0])) * y / 100
 
-            if loss > 1.01 or loss < -0.01:
+            if loss > 1.01 or loss < -1:
                 raise ValueError("Loss out of bounds for " + self.condition + " at " + str(loss) + " with c=" + str(self.c))
             if loss is np.nan:
                 raise ValueError("Invalid loss from continuous predictor")
@@ -234,6 +262,74 @@ class Cont:
             # If done training
             return None
 
+    def evaluate(self, ID, IDs, ss, n_p, CI):
+        if self.condition_dict[ID] is None:
+            y = np.nan
+        else:
+            y = self.condition_dict[ID]
+
+        xs = [self.condition_dict[item] for item in IDs] # Get values for similar proteins
+        if sum(x is not None for x in xs) > 0:
+            xs, ss = zip(*[(x, s) for x, s in zip(xs, ss) if x is not None])
+            xs, ss = np.array(xs), np.array(ss)
+            n_p = len(xs)
+        else:
+            n_p = 0
+
+        xbar = self.xbar
+        eta = self.eta
+
+        if n_p > 0:
+            # Pieces of yhats
+            sigmoids = sigmoid_array(self.w_1 * ss + self.w_0)
+            U = (np.log(np.exp(-self.w_1) + np.exp(self.w_0)) - np.log(1 + np.exp(self.w_0))) / self.w_1 + 1
+            hs = self.c * sigmoids / U
+            norm_c = 1/(np.sqrt(2 * math.pi) * eta * (n_p + 1))
+
+            def fyhat(yhat):
+                std_norm_piece = std_norm_exp((yhat - xbar)/eta)
+                std_phis = np.multiply(1/hs, std_norm_exp(zs(yhat, xs, hs)))
+                return norm_c * std_norm_piece + 1/((n_p + 1) * np.sqrt(2 * math.pi)) * np.sum(std_phis, axis=1)
+
+            # Get mean from linearity of expectation
+            mean = 1/(n_p + 1) * xbar + n_p/(n_p + 1) * np.mean(xs)
+
+            # Get mode
+            for_search = np.append(xbar, xs)
+            mode_start_search = min(for_search)
+            mode_stop_search = max(for_search)
+            search_dx = (mode_stop_search - mode_start_search)/1000
+            search_space = np.arange(mode_start_search, mode_stop_search * (1 + search_dx), search_dx)
+            searched = fyhat(search_space)
+            mode = search_space[np.argmax(searched)]
+
+            # Get NN% confidence interval
+            # Need to include option for what percent CI to report
+            lower = norm.ppf(0.5 - CI/2)
+            search_val = max(min(all_x), min(lower * eta + xbar, min(lower*hs + xs)))
+            while 1/(n_p + 1) * (norm.cdf((search_val - xbar)/eta) + np.sum(norm.cdf(np.divide(search_val - xs,hs)))) < 0.5 - CI/2:
+                search_val += search_dx
+            lb = search_val
+            while 1/(n_p + 1) * (norm.cdf((search_val - xbar)/eta) + np.sum(norm.cdf(np.divide(search_val - xs,hs)))) < 0.5:
+                search_val += search_dx
+            median = search_val
+            upper = norm.ppf(0.5 + CI/2)
+            search_val = min(max(all_x), max(upper * eta + xbar, max(upper*hs + xs)))
+            while 1/(n_p + 1) * (norm.cdf((search_val - xbar)/eta) + np.sum(norm.cdf(np.divide(search_val - xs,hs)))) >= 0.5 + CI/2:
+                search_val -= search_dx
+            ub = search_val + search_dx
+
+        else:
+            def fyhat(yhat):
+                return 1/(np.sqrt(2 * math.pi) * eta) * std_norm_exp(zs(yhat, xbar, eta)[0])
+            mean = xbar
+            mode = xbar
+            lb = norm.ppf(0.5 - CI/2) * eta + xbar
+            ub = norm.ppf(0.5 + CI/2) * eta + xbar
+
+        return y, mean, mode, median, lb, ub
+
+# Continuous variables with binary presence
 class Contbin:
     # Initalize weights and store variables in a useful way
     def __init__(self, condition, metadata, alpha = 0.1, beta_cont = 0.1, beta_bin = 0, w_0_cont = -1, w_1_cont = -2, w_0_bin = -1, w_1_bin = 3, convergence_radius=0.1, convergence_length=20000, done_updating = False):
@@ -396,7 +492,7 @@ class Contbin:
                     loss_cont = 0
                 loss_bin = -np.log(self.mean_block - y[1]/self.n)
 
-            if loss_cont > 1.01 or loss_cont < -0.01:
+            if loss_cont > 1.01 or loss_cont < -1:
                 raise ValueError("Loss out of bounds for " + self.condition + " at " + str(loss_cont) + " with w_0_bin:" + str(self.w_0_bin) + ", w_1_bin: " + str(self.w_1_bin) + ", w_0_cont: " + str(self.w_0_cont) + ", w_1_cont: " + str(self.w_1_cont) + ", c: " + str(self.c))
             if loss_cont is np.nan:
                 raise ValueError("Invalid loss from continuous predictor")
@@ -414,6 +510,7 @@ def zs2d(yhat, xs_1, xs_2, hs_1, hs_2):
 def std_norm_exp2d(x):
    return np.exp(-np.sum(np.square(x), axis=1)/2)
 
+# Continuous variables on two axes with binary presence
 class Bicontbin:
     # Initalize weights and store variables in a useful way
     def __init__(self, condition, metadata, alpha = 0.1, beta_cont = 0.1, beta_bin = 0, w_10_cont = -1, w_11_cont = -2, w_20_cont = -1, w_21_cont = -2, w_0_bin = -1, w_1_bin = 3, convergence_radius=0.1, convergence_length=20000, done_updating = False):
@@ -625,7 +722,7 @@ class Bicontbin:
 
             if loss_cont is np.nan:
                 raise ValueError("Invalid loss from continuous predictor")
-            if loss_cont > 1.01 or loss_cont < -0.01:
+            if loss_cont > 1.01 or loss_cont < -1:
                 raise ValueError("Loss out of bounds for " + self.condition + " at " + str(loss_cont) + " with w_0_bin:" + str(self.w_0_bin) + ", w_1_bin: " + str(self.w_1_bin) + ", w_10: " + str(self.w_10_cont) + ", w_11: " + str(self.w_11_cont) + ", c_1: " + str(self.c_1) + ", w_20: " + str(self.w_20_cont) + ", w_21: " + str(self.w_21_cont) + ", c_2: " + str(self.c_2))
             if loss_bin is np.nan:
                 raise ValueError("Invalid loss from categorical predictor")

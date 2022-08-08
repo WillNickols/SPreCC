@@ -18,15 +18,17 @@ from weight_models import *
 import timeit
 import copy
 
+# Parse arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--in-dir", help="input directory")
 parser.add_argument("--out-dir", help="output directory")
 parser.add_argument("--metadata", help="metadata tsv")
 parser.add_argument("--encodings", help="encodings tsv", default=None)
 parser.add_argument("--use-prev-weights", help="Use previous weights from pkl file", action='store_true')
+parser.add_argument("--skip-weight-fitting", help="Skip gradient descent for weight fitting", action='store_true')
+parser.add_argument("--skip-full-pass", help="Skip the predictive pass over all the proteins", action='store_true')
 parser.add_argument("--weight-pkl", help="pkl file for weights", default=None)
 parser.add_argument("--epochs", help="epochs", type=int, default = 10000)
-parser.add_argument("--output-file", help="specific output file", default = "")
 parser.add_argument("--stop-early", help="stop early if converged", type=float, default=0)
 parser.add_argument("--threads", help="threads to train on", default = 4, type=int)
 parser.add_argument("--alpha", help="alpha", default=0.1, type=float)
@@ -44,7 +46,6 @@ metadata = args.metadata
 encodings = args.encodings
 epochs = args.epochs
 threads = args.threads
-output_file = args.output_file
 stop_early = args.stop_early
 seed = args.seed
 save_freq = args.save_freq
@@ -90,6 +91,7 @@ if not os.path.exists(db_dir + 'combined_sketch.msh'):
 
     subprocess.run(['mash paste ' + db_dir + 'combined_sketch ' + db_dir + 'sketch_*'], shell=True)
 
+# Initialize weights as new or from file
 print("Initializing weights...")
 if args.use_prev_weights:
     try:
@@ -109,6 +111,7 @@ else:
     else:
         raise ValueError("No encodings provided")
 
+# Function to train weights in parallel
 def train_parallel(IDs, n, new_alpha):
     global weights
     input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
@@ -145,8 +148,41 @@ def train_parallel(IDs, n, new_alpha):
             all_loss.append(loss)
         return all_loss, all_done
 
-print("Beginning training...")
+# Function to train weights in parallel
+def evaluate_parallel(IDs, n):
+    global weights
+    input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
+    result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
 
+    if result == "":
+        n_p = 0
+        return [], False
+    else:
+        IDs, searches, ss = zip(*[map(item.split("\t").__getitem__, [0,1,2]) for item in result.split("\n")[:-1]])
+        IDs, searches, ss = [ID.split('/')[-1].split('.')[0] for ID in IDs], [ID.split('/')[-1].split('.')[0] for ID in searches], list(ss)
+
+        all_vals_out = []
+        for item in set(searches):
+            IDs_cur, ss_cur = zip(*[(ID, ss) for ID, search, ss in zip(IDs, searches, ss) if search == item])
+            IDs_cur, ss_cur = list(IDs_cur), list(ss_cur)
+
+            # Remove self match
+            with suppress(ValueError):
+                index_to_remove = IDs_cur.index(item)
+                del IDs_cur[index_to_remove]
+                del ss_cur[index_to_remove]
+
+            n_p = len(IDs_cur)
+
+            ss_cur = 1 - np.array(ss_cur, dtype = 'f')
+            vals_out = []
+            for key in weights:
+                vals_out.append(weights[key].evaluate(item, IDs_cur, ss_cur, n_p))
+
+            all_vals_out.append(vals_out)
+        return all_vals_out
+
+# Function to display weights
 def view_weights():
     for key, value in weights.items():
         try:
@@ -160,50 +196,84 @@ def view_weights():
                 except:
                     print(key + ": w_0:" + str(value.w_0) + ", w_1: " + str(value.w_1))
 
-if output_file == "":
-    output_file = "training.log"
+# Fit the weights
+if not args.skip_weight_fitting:
+    print("Beginning training...")
+    loss_file = "loss.log"
 
-colnames = [key for key, _ in weights.items()]
-colnames.append("ID")
+    colnames = [key for key, _ in weights.items()]
+    colnames.append("ID")
 
-with open(out_dir + output_file, 'w') as f:
-    writer = csv.writer(f, delimiter='\t')
-    writer.writerow(colnames)
+    with open(out_dir + loss_file, 'w') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerow(colnames)
 
-n = len(df.index) - 1
+    n = len(df.index) - 1
 
-if args.weight_pkl is None:
-    weight_pkl = out_dir + "weights.pkl"
-else:
-    weight_pkl = args.weight_pkl
-
-np.random.seed(seed)
-for i in range(epochs):
-    rng = default_rng()
-    numbers = rng.choice(n + 1, size = n + 1, replace = False)
-    IDs = df['seq_ID'][numbers].tolist()
-
-    batches = [IDs[i:i+threads] for i in range(0, len(IDs), 3)]
-    for j, batch in enumerate(batches):
-        new_alpha = ((1 - i / epochs) - (1 - j / len(batches))/epochs) * alpha
-        all_loss, all_done = train_parallel(batch, n, new_alpha)
-        print("Epoch: " + str(i) + " Iteration: " + str(j) + " IDs: " + " ".join(batch))
-
-        if all_loss is not None:
-            with open(out_dir + output_file, 'a') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(all_loss)
-
-        if j % save_freq == 0:
-            with open(weight_pkl, "wb") as f:
-                pkl.dump(weights, f)
-            view_weights()
-
-        if all_done:
-            print("Weights converged.  Saving weights and ending training...")
-            with open(weight_pkl, "wb") as f:
-                pkl.dump(weights, f)
-            break
+    if args.weight_pkl is None:
+        weight_pkl = out_dir + "weights.pkl"
     else:
-        continue
-    break
+        weight_pkl = args.weight_pkl
+
+    np.random.seed(seed)
+    for i in range(epochs):
+        rng = default_rng()
+        numbers = rng.choice(n + 1, size = n + 1, replace = False)
+        IDs = df['seq_ID'][numbers].tolist()
+
+        batches = [IDs[i:i+threads] for i in range(0, len(IDs), 3)]
+        for j, batch in enumerate(batches):
+            new_alpha = ((1 - i / epochs) - (1 - j / len(batches))/epochs) * alpha
+            all_loss, all_done = train_parallel(batch, n, new_alpha)
+            print("Epoch: " + str(i) + " Iteration: " + str(j) + " IDs: " + " ".join(batch))
+
+            if all_loss is not None:
+                for loss_iter, ID in enumerate(batch):
+                    all_loss[loss_iter].append(batch)
+                with open(out_dir + loss_file, 'a') as f:
+                    writer = csv.writer(f, delimiter='\t')
+                    writer.writerows(all_loss)
+
+            if j % save_freq == 0:
+                with open(weight_pkl, "wb") as f:
+                    pkl.dump(weights, f)
+                view_weights()
+
+            if all_done:
+                print("Weights converged.  Saving weights and ending training...")
+                break
+        else:
+            continue
+        break
+
+    with open(weight_pkl, "wb") as f:
+        pkl.dump(weights, f)
+
+# Evalaute the model on all train proteins to get thresholds and accuracy
+if not args.skip_full_pass:
+    print("Beginning final pass...")
+    final_pass_file = "final_pass.log"
+
+    colnames = [key for key, _ in weights.items()]
+    colnames.append("ID")
+
+    with open(out_dir + final_pass_file, 'w') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerow(colnames)
+
+    n = len(df.index) - 1
+
+    np.random.seed(seed)
+    for i in range(epochs):
+        IDs = df['seq_ID'].tolist()
+
+        batches = [IDs[i:i+threads] for i in range(0, len(IDs), 3)]
+        for j, batch in enumerate(batches):
+            vals_out = evaluate_parallel(batch, n)
+            print("Step " + str(j) + " of " + str(batches) + ", IDs: " + " ".join(batch))
+
+            for loss_iter, ID in enumerate(batch):
+                vals_out[loss_iter].append(batch)
+            with open(out_dir + final_pass_file, 'a') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(vals_out)
