@@ -10,6 +10,7 @@ Knowledge of the three-dimensional structures of proteins is essential for under
 * [Models](#models)
 * [Data Curation](#data-curation)
 * [Results](#results)
+* [Authors and Acknowledgements](#authors-and-acknowledgements)
 
 ## Introduction
 
