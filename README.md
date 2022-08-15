@@ -251,8 +251,5 @@ n_p, weights
 
 ### Concentration evaluation
 
-
-
-
-
-
+## Authors and Acknowledgements
+This project was envisioned, planned, and implemented by Will Nickols, Ben Tang, Jorge Guerra, Srihari Ganesh, and Andrew Lu.  The computations were run in part on the FASRC Cannon cluster supported by the FAS Division of Science Research Computing Group at Harvard University.  We would additionally like to thank the Curtis Huttenhower lab and the Long Nguyen lab at the Harvard School of Public Health for their computing resources.  The content and any mistakes herein are solely the responsibility of W. Nickols, B. Tang, J. Guerra, S. Ganesh, and A. Lu and do not reflect the views of the Huttenhower or Nguyen labs.
