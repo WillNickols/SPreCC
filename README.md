@@ -17,15 +17,16 @@ Let $y$ be the true binary value we are interested in (such as whether or not so
 
 $$\hat{y} = \frac{\bar{x}}{n_p+1} + \frac{n_p}{n_p+1}\cdot\frac{\sum\limits_{i} x_i\sigma(w_1s_i+w_0)}{\sum\limits_{i} \sigma(w_1s_i+w_0)} \textrm{ for } i \textrm{ such that } p_i<\tau$$
 
- where $x_i$ is the binary value for protein $i$ (e.g. whether sodium chloride was present for protein $i$), $s_i\in[0,1]$ is 1 minus the [Mash](https://mash.readthedocs.io/en/latest/index.html) distance between protein $i$ and the protein of interest, $\sigma$ is the [sigmoid function](https://en.wikipedia.org/wiki/Sigmoid_function), $p_i$ is the Mash p-value of the similarity between protein $i$ and the target protein (how likely the two proteins are to have their reported degree of similarity by chance), $\bar{x}$ is the average value of the binary condition across all the dataset excluding the protein of interest, and $n_p$ is the total number of proteins with Mash p-values less than $\tau$.  Intuitively, we are taking a weighted average between the binary values from all the proteins and the binary values from related proteins.  This ensures that the model still gives an estimate for proteins with no similar proteins in the database while also allowing predictions for proteins with even a few similar proteins to be mostly determined by the conditions of those similar proteins.  Within the term corresponding to similar proteins, $\sigma(w_1s_i+w_0)$ is the weight for the crystallization condition of protein $i$, and the denominator normalizes the calculation.  Each weight should be some value between 0 and 1, and we expect greater sequence identities to correspond to heavier weights, but the model allows flexibility in how much some amount of additional sequence identity should increase the weight.  This weighting scheme allows much more flexibility and speed than, for example, incorporating the distance of every protein or ranking the most similar proteins.  It allows a variable number of inputs, preventing a need for as many independent weights as there are proteins, and it allows the weight to be determined directly from the sequence similarity rather than from some ranking of similarities.  We will attempt to minimize the negative log-likelihood loss: $L(y,\hat{y})=-[y\ln(\hat{y}) + (1-y)\ln(1-\hat{y})]$.
+ where $x_i$ is the binary value for protein $i$ (e.g. whether sodium chloride was present for protein $i$), $s_i\in[0,1]$ is 1 minus the [Mash](https://mash.readthedocs.io/en/latest/index.html) distance between protein $i$ and the protein of interest, $\sigma$ is the [sigmoid function](https://en.wikipedia.org/wiki/Sigmoid_function), $p_i$ is the Mash p-value of the similarity between protein $i$ and the target protein (how likely the two proteins are to have their reported degree of similarity by chance), $\bar{x}$ is the average value of the binary condition across all the dataset excluding the protein of interest, and $n_p$ is the total number of proteins with Mash p-values less than $\tau$.  Intuitively, we are taking a weighted average between the binary values from all the proteins and the binary values from related proteins.  This ensures that the model still gives an estimate for proteins with no similar proteins in the database while also allowing predictions for proteins with even a few similar proteins to be mostly determined by the conditions of those similar proteins.  Within the term corresponding to similar proteins, $\sigma(w_1s_i+w_0)$ is the weight for the crystallization condition of protein $i$, and the denominator normalizes the calculation.  Each weight should be some value between 0 and 1, and we expect greater sequence identities to correspond to heavier weights, but the model allows flexibility in how much some amount of additional sequence identity should increase the weight.  This weighting scheme allows much more flexibility and speed than, for example, incorporating the distance of every protein or ranking the most similar proteins.  It allows a variable number of inputs, preventing a need for as many independent weights as there are proteins, and it allows the weight to be determined directly from the sequence similarity rather than from some ranking of similarities.  We will attempt to minimize the negative log-likelihood loss: 
+ $$L(y,\hat{y}, \beta)=-[y\ln(\hat{y}) + (1-y)\ln(1-\hat{y})] + \beta||\boldsymbol{w}||^2$$
 
 The specified model enables the fitting of two parameters: $w_0$ and $w_1$.  Let $\sigma_i=\sigma(w_1s_i+w_0)$.  Applying the chain rule, we obtain the following:
 
 $$\begin{align*} 
-\frac{\partial L(\hat{y},y)}{\partial w_0} &= \frac{\partial L(\hat{y},y)}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial w_0}\\ 
-&= -\left[\frac{y}{\hat{y}}-\frac{1-y}{1-\hat{y}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_i\sigma_i(1-\sigma_i)\right)-\left(\sum\limits_{i}x_i\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}\\
-\frac{\partial L(\hat{y},y)}{\partial w_1} &=  \frac{\partial L(\hat{y},y)}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial w_1}\\ 
-&=  -\left[\frac{y}{\hat{y}}-\frac{1-y}{1-\hat{y}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_i\sigma_i(1-\sigma_i)s_i\right)-\left(\sum\limits_{i}x_i\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)s_i\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}
+\frac{\partial L(\hat{y},y)}{\partial w_0} &= \frac{\partial L(\hat{y},y)}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial w_0} +2\beta w_0\\ 
+&= -\left[\frac{y}{\hat{y}}-\frac{1-y}{1-\hat{y}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_i\sigma_i(1-\sigma_i)\right)-\left(\sum\limits_{i}x_i\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}+2\beta w_0\\
+\frac{\partial L(\hat{y},y)}{\partial w_1} &=  \frac{\partial L(\hat{y},y)}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial w_1}+2\beta w_1\\ 
+&=  -\left[\frac{y}{\hat{y}}-\frac{1-y}{1-\hat{y}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_i\sigma_i(1-\sigma_i)s_i\right)-\left(\sum\limits_{i}x_i\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)s_i\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}+2\beta w_1
 \end{align*}$$
 
 Because of the memory requirements involved in manipulating all the amino acid identity scores at once, we will use stochastic gradient descent to pick a protein at random, determine its amino acid identity against all the other proteins, predict its condition, and update the weights according to the loss.  With a learning rate $\alpha$, the update statements will be as follows:
@@ -51,17 +52,17 @@ $$\hat{y} = \frac{\bar{x}}{n_p+1} + \frac{n_p}{n_p+1}\cdot\frac{\sum\limits_{i} 
 
  where $x_i$ is the one-hot encoded vector for protein $i$, $s_i\in[0,1]$ is 1 minus the Mash distance between protein $i$ and the protein of interest, $\sigma$ is the sigmoid function, $p_i$ is the Mash p-value of the similarity between protein $i$ and the target protein, $\bar{x}$ is the element-wise average of the one-hot encoded vectors across all the dataset excluding the protein of interest, and $n_p$ is the total number of proteins with Mash p-values less than $\tau$.  Intuitively, we are taking a weighted average between the classes of all the proteins and the classes of related proteins.  This ensures that the model still predicts a class for proteins with no similar proteins in the database while also allowing predictions for proteins with even a few similar proteins to be mostly determined by the classes of those similar proteins.  Within the term corresponding to similar proteins, $\sigma(w_1s_i+w_0)$ is the weight for the class of protein $i$, and the denominator normalizes the calculation.  We will attempt to minimize the negative log-likelihood loss: 
  
-$$L(y,\hat{y})=-\sum_{k=1}^K y_k \ln (\hat{y}_k) $$ 
+$$L(y,\hat{y}, \beta)=-\sum_{k=1}^K y_k \ln (\hat{y}_k) + \beta||\boldsymbol{w}||^2$$ 
 
 where $K$ is the number of classes.
 
 The specified model enables the fitting of two parameters: $w_0$ and $w_1$.  Because of the loss specification, the gradient with respect to $w_0$ or $w_1$ will only pass through the chain rule with the $\hat{y}_k$ that corresponds to the correct $y_k$.  Let $\sigma_i=\sigma(w_1s_i+w_0)$.  Applying the chain rule, we obtain the following:
 
 $$\begin{align*} 
-\frac{\partial L(\hat{y},y)}{\partial w_0} &= \frac{\partial L(\hat{y},y)}{\partial \hat{y_k}} \cdot \frac{\partial \hat{y_k}}{\partial w_0}\\ 
-&= -\left[\frac{1}{\hat{y_k}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_{k,i}\sigma_i(1-\sigma_i)\right)-\left(\sum\limits_{i}x_{k,i}\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}\\
-\frac{\partial L(\hat{y},y)}{\partial w_1} &=  \frac{\partial L(\hat{y},y)}{\partial \hat{y_k}} \cdot \frac{\partial \hat{y_k}}{\partial w_1}\\ 
-&=  -\left[\frac{1}{\hat{y_k}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_{k,i}\sigma_i(1-\sigma_i)s_i\right)-\left(\sum\limits_{i}x_{k,i}\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)s_i\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}
+\frac{\partial L(\hat{y},y)}{\partial w_0} &= \frac{\partial L(\hat{y},y)}{\partial \hat{y_k}} \cdot \frac{\partial \hat{y_k}}{\partial w_0}+2\beta w_0\\ 
+&= -\left[\frac{1}{\hat{y_k}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_{k,i}\sigma_i(1-\sigma_i)\right)-\left(\sum\limits_{i}x_{k,i}\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}+2\beta w_0\\
+\frac{\partial L(\hat{y},y)}{\partial w_1} &=  \frac{\partial L(\hat{y},y)}{\partial \hat{y_k}} \cdot \frac{\partial \hat{y_k}}{\partial w_1}+2\beta w_1\\ 
+&=  -\left[\frac{1}{\hat{y_k}}\right]\cdot \frac{\left(\sum\limits_{i}\sigma_i\right)\left(\sum\limits_{i}x_{k,i}\sigma_i(1-\sigma_i)s_i\right)-\left(\sum\limits_{i}x_{k,i}\sigma_i\right)\left(\sum\limits_{i}\sigma_i(1-\sigma_i)s_i\right)}{\left(\sum\limits_{i}\sigma_i\right)^2}+2\beta w_1
 \end{align*}$$
 
 Because of the memory requirements involved in manipulating all the amino acid identity scores at once, we will use stochastic gradient descent to pick a protein at random, determine its amino acid identity against all the other proteins, predict its condition, and update the weights according to the loss.  With a learning rate $\alpha$, the update statements will be as follows:
@@ -89,7 +90,7 @@ h_i=\frac{c\sigma(w_1s_i+w_0)}{\int_0^1\sigma(w_1x+w_0)dx}=\frac{c\sigma(w_1s_i+
 
  where $\sigma$ is the sigmoid function and $c$ is a scaling value.  Letting $\mathbf{x}$ be the vector of conditions of the similar proteins and $\mathbf{s}$ be the vector of sequence identities of the similar proteins, define the loss as 
  
- $$L(y, \mathbf{x}, \mathbf{s}, \bar{x}, \eta, \delta, \beta)=1-\int_{y(1-\delta)}^{y(1+\delta)}f(\hat{y})d\hat{y}+\beta(\eta-c)^2$$
+ $$L(y, \mathbf{x}, \mathbf{s}, \bar{x}, \eta, \delta, \beta)=1-\int_{y(1-\delta)}^{y(1+\delta)}f(\hat{y})d\hat{y}+\beta(\eta-c)^2 + \beta||\boldsymbol{w}||^2$$
  
  with $f$ and $h_i$ as defined above.  We choose to regularize $c$ against $\eta$ because a naive bandwidth should be about the standard deviation of the whole observed condition range, not 0.  In practice, letting $c$ vary often causes the model to break down because values of $x_i$ close to $y$ generate an extremely steep gradient for $c$, pushing $c$ very close to 0.  By creating extremely sharp peaks of density at each $x_i$, this undermines the effort to create a smooth probability density and makes numerical integration essentially impossible.  Thus, we will fix $c$ at $\eta$.   While this forces the average bandwidth to be the standard deviation of all values for the condition, the function is capable of becoming much larger near 0 than near 1, and protein similarities near 0 often do not pass the p-value threshold for inclusion.  Thus, in practice, bandwidths can become as small as necessary even with a fixed $c$.  Still, for generality, we will treat $c$ as a variable.
 
@@ -111,8 +112,8 @@ However, we are actually interested in the integrals of these quantities, so app
 
 $$\begin{equation}
 \begin{aligned} 
-\frac{\partial L(y, \mathbf{x}, \mathbf{s}, \bar{x}, \eta, \delta, \beta)}{\partial w_0} &= -\int_{y(1-\delta)}^{y(1+\delta)} \frac{\partial f(\hat{y})}{\partial w_0}d\hat{y}\\   
-\frac{\partial L(y, \mathbf{x}, \mathbf{s}, \bar{x}, \eta, \delta, \beta)}{\partial w_1} &=  -\int_{y(1-\delta)}^{y(1+\delta)} \frac{\partial f(\hat{y})}{\partial w_1}d\hat{y}\\ 
+\frac{\partial L(y, \mathbf{x}, \mathbf{s}, \bar{x}, \eta, \delta, \beta)}{\partial w_0} &= -\int_{y(1-\delta)}^{y(1+\delta)} \frac{\partial f(\hat{y})}{\partial w_0}d\hat{y}+2\beta w_0\\   
+\frac{\partial L(y, \mathbf{x}, \mathbf{s}, \bar{x}, \eta, \delta, \beta)}{\partial w_1} &=  -\int_{y(1-\delta)}^{y(1+\delta)} \frac{\partial f(\hat{y})}{\partial w_1}d\hat{y}+2\beta w_1\\ 
 \frac{\partial L(y, \mathbf{x}, \mathbf{s}, \bar{x}, \eta, \delta, \beta)}{\partial c} &=  -\int_{y(1-\delta)}^{y(1+\delta)} \frac{\partial f(\hat{y})}{\partial c}d\hat{y}+2\beta (c-\eta)\\
 \end{aligned}
 \end{equation}$$
@@ -169,7 +170,7 @@ h_{j,i}=\frac{c_j\sigma(w_{j,1}s_i+w_{j,0})}{\int_0^1\sigma(w_{j,1}x+w_{j,0})dx}
 
  for $j\in\{1,2\}$ where $\sigma$ is the sigmoid function and $c_j$ is a scaling value.  Letting $\mathbf{x}$ be the vector of conditions of the similar proteins and $\mathbf{s}$ be the vector of sequence identities of the similar proteins, define the loss as 
  
- $$L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)=1-\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}f(\hat{y_1},\hat{y_2})d\hat{y_1}d\hat{y_2}+\beta||\boldsymbol{\eta}-\mathbf{c}||^2$$
+ $$L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)=1-\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}f(\hat{y_1},\hat{y_2})d\hat{y_1}d\hat{y_2}+\beta||\boldsymbol{\eta}-\mathbf{c}||^2 + \beta||\boldsymbol{w}||^2$$
  
  with $f$ and $(h_{1,i}, h_{2,i})$ as defined above.  We choose to regularize $\mathbf{c}$ against $\boldsymbol{\eta}$ because a naive bandwidth should be about the standard deviation of the whole observed condition range, not 0.  In practice, letting $c_1$ and $c_2$ vary often causes the model to break down because values of $x_i$ close to $y$ generate an extremely steep gradient for $c_1$ and $c_2$, pushing them very close to 0.  By creating extremely sharp peaks of density at each $x_i$, this undermines the effort to create a smooth probability density and makes numerical integration essentially impossible.  Thus, we will fix $c_1$ and $c_2$ at $\eta_1$ and $\eta_2$ respectively.  While fixing these values forces the average bandwidth to be the standard deviation of all values for the condition, the function is capable of becoming much larger near 0 than near 1, and protein similarities near 0 often do not pass the p-value threshold for inclusion.  Thus, in practice, bandwidths can become as small as necessary even with fixed $c_1$ and $c_2$.  Still, for generality, we will treat both as variables.
 
@@ -192,8 +193,8 @@ However, we are actually interested in the integrals of these quantities, so app
 
 $$\begin{equation}
 \begin{aligned} 
-\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,0}} &= -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial w_{j,0}}d\hat{y_1}d\hat{y_2}\\   
-\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,1}} &=  -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial w_{j,1}}d\hat{y_1}d\hat{y_2}\\ 
+\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,0}} &= -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial w_{j,0}}d\hat{y_1}d\hat{y_2}+2\beta w_{j,0}\\   
+\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,1}} &=  -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial w_{j,1}}d\hat{y_1}d\hat{y_2}+2\beta w_{j,1}\\ 
 \frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial c_j} &=  -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial c_{j}}d\hat{y_1}d\hat{y_2}+2\beta (c_j-\eta_j)\\
 \end{aligned}
 \end{equation}$$
@@ -234,3 +235,18 @@ Because the crystallization conditions are provided in a free text field, we fur
 In general, to keep as many proteins for training and evaluation as possible, we included in training and evaluation any fields with recognizable and plausible information but excluded any fields without information.  For example, if a PDB entry only provided the protein's method of crystallization and pH at crystallization, we included that protein for training or evaluation on method and pH but excluded it from training or evaluation on temperature, chemical presence or absence, and chemical concentration.
 
 ## Results
+
+The optimal crystallization condition prediction tool would be one which (1) accurately and with with high precision and recall predicts which chemicals are necessary for crystallization, (2) with a small margin of error predicts the concentration or a range of concentrations for those chemicals, (3) with a small margin of error predicts the value of or a range for the pH and temperature for crystallization, and (4) accurately predicts the optimal crystallization method to use.  We consider this last prediction the least useful because almost all proteins use vapor diffusion and those that do not (e.g. many membrane proteins) are well characterized enough before X-ray crystallography to know that an alterantive method will work better.  However, in the spirit of making our results comparable with previous work, we will include this prediction.
+
+### Model evaluation
+n_p, weights
+
+### Presence/absence evaluation
+
+### Concentration evaluation
+
+
+
+
+
+
