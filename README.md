@@ -246,6 +246,7 @@ In general, to keep as many proteins for training and evaluation as possible, we
 The optimal crystallization condition prediction tool would be one which (1) accurately and with with high precision and recall predicts which chemicals are necessary for crystallization, (2) with a small margin of error predicts the concentration or a range of concentrations for those chemicals, (3) with a small margin of error predicts the value of or a range for the pH and temperature for crystallization, and (4) accurately predicts the optimal crystallization method to use.  We consider this last prediction the least useful because almost all proteins use vapor diffusion and those that do not (e.g. many membrane proteins) are well characterized enough before X-ray crystallography to know that an alterantive method will work better.  However, in the spirit of making our results comparable with previous work, we will include this prediction.
 
 ### Model evaluation
+
 n_p, weights
 
 ### Presence/absence evaluation
