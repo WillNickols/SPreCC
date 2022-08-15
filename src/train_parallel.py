@@ -28,12 +28,17 @@ parser.add_argument("--use-prev-weights", help="Use previous weights from pkl fi
 parser.add_argument("--skip-weight-fitting", help="Skip gradient descent for weight fitting", action='store_true')
 parser.add_argument("--skip-full-pass", help="Skip the predictive pass over all the proteins", action='store_true')
 parser.add_argument("--weight-pkl", help="pkl file for weights", default=None)
-parser.add_argument("--epochs", help="epochs", type=int, default = 10000)
+parser.add_argument("--epochs", help="epochs", type=int, default = 5)
 parser.add_argument("--stop-early", help="stop early if converged", type=float, default=0)
 parser.add_argument("--threads", help="threads to train on", default = 4, type=int)
 parser.add_argument("--alpha", help="alpha", default=0.1, type=float)
-parser.add_argument("--beta-cont", help="regularization for continuous parameters", default=0, type=float)
+parser.add_argument("--beta-cont", help="regularization for continuous parameters", default=0.001, type=float)
 parser.add_argument("--beta-bin", help="regularization for binary parameters", default=0, type=float)
+parser.add_argument("--w-0-bin", help="w_0_bin", default=-1, type=float)
+parser.add_argument("--w-1-bin", help="w_1_bin", default=3, type=float)
+parser.add_argument("--w-0-cont", help="w_0_cont", default=-1, type=float)
+parser.add_argument("--w-1-cont", help="w_1_cont", default=-2, type=float)
+parser.add_argument("--CI", help="confidence interval from 0 to 1", default=0.9, type=float)
 parser.add_argument("--convergence-radius", help="distance between max and min in recent training history at which to end training early", default=0.1, type=float)
 parser.add_argument("--convergence-length", help="number of training iterations over which to test the convergence radius", default=20000, type=int)
 parser.add_argument("--seed", help="random seed", default=1, type=int)
@@ -50,6 +55,7 @@ stop_early = args.stop_early
 seed = args.seed
 save_freq = args.save_freq
 alpha=args.alpha
+CI = args.CI
 
 out_dir = "/" + out_dir.strip("/") + "/"
 if not os.path.isdir(out_dir):
@@ -104,7 +110,7 @@ else:
         encodings_tmp = pd.read_csv(encodings, sep='\t')
         input_list = [(condition, encoding) for condition, encoding in zip(encodings_tmp['name'].tolist(), encodings_tmp['encoding'].tolist()) if encoding is not np.nan]
         def load_encodings(condition, encoding):
-            return (condition, get_encoding(encoding, condition, df, args.beta_cont, args.beta_bin, args.convergence_radius, args.convergence_length, alpha))
+            return (condition, get_encoding(encoding, condition, df, args.beta_cont, args.beta_bin, args.w_0_bin, args.w_1_bin, args.w_0_cont, args.w_1_cont, args.convergence_radius, args.convergence_length, alpha))
         with mp.Pool(processes = threads) as p:
             weights = dict(p.starmap(load_encodings, input_list))
         del encodings_tmp
@@ -114,13 +120,17 @@ else:
 # Function to train weights in parallel
 def train_parallel(IDs, n, new_alpha):
     global weights
+    global threads
+    start_time = timeit.default_timer()
     input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
     result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
+    print("Mash time: " + str(timeit.default_timer() - start_time))
 
     if result == "":
         n_p = 0
         return [], False
     else:
+        start_time = timeit.default_timer()
         IDs, searches, ss = zip(*[map(item.split("\t").__getitem__, [0,1,2]) for item in result.split("\n")[:-1]])
         IDs, searches, ss = [ID.split('/')[-1].split('.')[0] for ID in IDs], [ID.split('/')[-1].split('.')[0] for ID in searches], list(ss)
 
@@ -145,54 +155,78 @@ def train_parallel(IDs, n, new_alpha):
                 weights[key].set_alpha(new_alpha)
                 all_done = all_done and weights[key].done_updating
 
+            loss.append(item)
+
             all_loss.append(loss)
+        print("Update time: " + str(timeit.default_timer() - start_time))
         return all_loss, all_done
 
 # Function to train weights in parallel
-def evaluate_parallel(IDs, n):
+def evaluate_parallel(IDs_org, n, CI):
     global weights
-    input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
+    global threads
+    input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs_org]
+    start_time = timeit.default_timer()
     result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
+    print("Mash time: " + str(timeit.default_timer() - start_time))
 
     if result == "":
         n_p = 0
-        return [], False
+        all_vals_out = []
+        for ID in IDs_org:
+            vals_out = []
+            for key in weights:
+                vals_out.append(weights[key].evaluate(ID, [], [], n_p, CI))
+
+            all_vals_out.append(vals_out)
+        return all_vals_out
+
     else:
+        start_time = timeit.default_timer()
         IDs, searches, ss = zip(*[map(item.split("\t").__getitem__, [0,1,2]) for item in result.split("\n")[:-1]])
         IDs, searches, ss = [ID.split('/')[-1].split('.')[0] for ID in IDs], [ID.split('/')[-1].split('.')[0] for ID in searches], list(ss)
 
         all_vals_out = []
-        for item in set(searches):
-            IDs_cur, ss_cur = zip(*[(ID, ss) for ID, search, ss in zip(IDs, searches, ss) if search == item])
-            IDs_cur, ss_cur = list(IDs_cur), list(ss_cur)
+        searches_set = set(searches)
+        for item in IDs_org:
+            if item in searches_set:
+                IDs_cur, ss_cur = zip(*[(ID, ss) for ID, search, ss in zip(IDs, searches, ss) if search == item])
+                IDs_cur, ss_cur = list(IDs_cur), list(ss_cur)
 
-            # Remove self match
-            with suppress(ValueError):
-                index_to_remove = IDs_cur.index(item)
-                del IDs_cur[index_to_remove]
-                del ss_cur[index_to_remove]
+                # Remove self match
+                with suppress(ValueError):
+                    index_to_remove = IDs_cur.index(item)
+                    del IDs_cur[index_to_remove]
+                    del ss_cur[index_to_remove]
 
-            n_p = len(IDs_cur)
+                n_p = len(IDs_cur)
 
-            ss_cur = 1 - np.array(ss_cur, dtype = 'f')
-            vals_out = []
-            for key in weights:
-                vals_out.append(weights[key].evaluate(item, IDs_cur, ss_cur, n_p))
+                ss_cur = 1 - np.array(ss_cur, dtype = 'f')
+                vals_out = []
+                for key in weights:
+                    vals_out.append(weights[key].evaluate(item, IDs_cur, ss_cur, n_p, CI))
 
-            all_vals_out.append(vals_out)
+                all_vals_out.append(vals_out)
+            else:
+                vals_out = []
+                for key in weights:
+                    vals_out.append(weights[key].evaluate(item, [], [], 0, CI))
+
+                all_vals_out.append(vals_out)
+        print("Calculate time: " + str(timeit.default_timer() - start_time))
         return all_vals_out
 
 # Function to display weights
 def view_weights():
     for key, value in weights.items():
         try:
-            print(key + ": w_0_bin:" + str(value.w_0_bin) + ", w_1_bin: " + str(value.w_1_bin) + ", w_10: " + str(value.w_10_cont) + ", w_11: " + str(value.w_11_cont) + ", c_1: " + str(value.c_1) + ", w_20: " + str(value.w_20_cont) + ", w_21: " + str(value.w_21_cont) + ", c_2: " + str(value.c_2) + ", eta_1: " + str(value.eta_1) + ", eta_2: " + str(value.eta_2))
+            print(key + ": w_0_bin:" + str(value.w_0_bin) + ", w_1_bin: " + str(value.w_1_bin) + ", w_10: " + str(value.w_10_cont) + ", w_11: " + str(value.w_11_cont) + ", c_1: " + str(value.c_1) + ", w_20: " + str(value.w_20_cont) + ", w_21: " + str(value.w_21_cont) + ", c_2: " + str(value.c_2))
         except:
             try:
-                print(key + ": w_0_bin:" + str(value.w_0_bin) + ", w_1_bin: " + str(value.w_1_bin) + ", w_0_cont: " + str(value.w_0_cont) + ", w_1_cont: " + str(value.w_1_cont) + ", c: " + str(value.c) + ", eta: " + str(value.eta))
+                print(key + ": w_0_bin:" + str(value.w_0_bin) + ", w_1_bin: " + str(value.w_1_bin) + ", w_0_cont: " + str(value.w_0_cont) + ", w_1_cont: " + str(value.w_1_cont) + ", c: " + str(value.c))
             except:
                 try:
-                    print(key + ": w_0:" + str(value.w_0) + ", w_1: " + str(value.w_1) + ", c: " + str(value.c) + ", eta: " + str(value.eta))
+                    print(key + ": w_0:" + str(value.w_0) + ", w_1: " + str(value.w_1) + ", c: " + str(value.c))
                 except:
                     print(key + ": w_0:" + str(value.w_0) + ", w_1: " + str(value.w_1))
 
@@ -221,15 +255,13 @@ if not args.skip_weight_fitting:
         numbers = rng.choice(n + 1, size = n + 1, replace = False)
         IDs = df['seq_ID'][numbers].tolist()
 
-        batches = [IDs[i:i+threads] for i in range(0, len(IDs), 3)]
+        batches = [IDs[i:i+threads] for i in range(0, len(IDs), threads)]
         for j, batch in enumerate(batches):
+            print("Epoch: " + str(i) + " Iteration: " + str(j) + " IDs: " + " ".join(batch))
             new_alpha = ((1 - i / epochs) - (1 - j / len(batches))/epochs) * alpha
             all_loss, all_done = train_parallel(batch, n, new_alpha)
-            print("Epoch: " + str(i) + " Iteration: " + str(j) + " IDs: " + " ".join(batch))
 
             if all_loss is not None:
-                for loss_iter, ID in enumerate(batch):
-                    all_loss[loss_iter].append(batch)
                 with open(out_dir + loss_file, 'a') as f:
                     writer = csv.writer(f, delimiter='\t')
                     writer.writerows(all_loss)
@@ -263,17 +295,15 @@ if not args.skip_full_pass:
 
     n = len(df.index) - 1
 
-    np.random.seed(seed)
-    for i in range(epochs):
-        IDs = df['seq_ID'].tolist()
+    IDs = df['seq_ID'].tolist()
+    batches = [IDs[i:i+threads] for i in range(0, len(IDs), threads)]
+    for j, batch in enumerate(batches):
+        print("Step " + str(j) + " of " + str(len(batches)) + ", IDs: " + " ".join(batch))
+        vals_out = evaluate_parallel(batch, n, CI)
 
-        batches = [IDs[i:i+threads] for i in range(0, len(IDs), 3)]
-        for j, batch in enumerate(batches):
-            vals_out = evaluate_parallel(batch, n)
-            print("Step " + str(j) + " of " + str(batches) + ", IDs: " + " ".join(batch))
+        for loss_iter, ID in enumerate(batch):
+            vals_out[loss_iter].append(ID)
 
-            for loss_iter, ID in enumerate(batch):
-                vals_out[loss_iter].append(batch)
-            with open(out_dir + final_pass_file, 'a') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(vals_out)
+        with open(out_dir + final_pass_file, 'a') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(vals_out)

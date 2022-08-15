@@ -6,6 +6,7 @@ import warnings
 from pathlib import Path
 import gzip
 import os
+import itertools
 
 # Usage: python extract_and_check_seqs.py in_dir output_dir metadata threads > log.txt
 
@@ -36,13 +37,16 @@ def fasta_from_cif(pdb_filename):
                 partition = pdb_filename.split("/")[-2]
                 if not os.path.isdir(output_dir + partition + "/"):
                     os.makedirs(output_dir + partition + "/")
-                for record in SeqIO.parse(pdb_file, 'cif-atom'):
-                    # Only keep sequences longer than 20 amino acids
-                    if len(record.seq) > 20 and not os.path.exists(output_dir + partition + "/" + record.id.replace(":", "_") + ".fasta"):
-                        record.name = record.name.replace(":", "_")
-                        record.id = record.id.replace(":", "_")
-                        record.description = record.description.replace(":", "_")
-                        SeqIO.write(record, output_dir + partition + "/" + record.id.replace(":", "_") + ".fasta", "fasta")
+                records = [record for record in SeqIO.parse(pdb_file, 'cif-atom')]
+                record_lengths = [len(record.seq) for record in records]
+                index_max = max(range(len(record_lengths)), key=record_lengths.__getitem__)
+                record = records[index_max]
+                # Only keep sequences longer than 20 amino acids
+                if len(record.seq) > 20 and not os.path.exists(output_dir + partition + "/" + record.id.replace(":", "_") + ".fasta"):
+                    record.name = record.name.replace(":", "_")
+                    record.id = record.id.replace(":", "_")
+                    record.description = record.description.replace(":", "_")
+                    SeqIO.write(record, output_dir + partition + "/" + record.id.replace(":", "_") + ".fasta", "fasta")
         except:
             pass
     return

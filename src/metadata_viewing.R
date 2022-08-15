@@ -5,6 +5,8 @@ library(ggplot2)
 
 # Read metadata
 metadata <- read.csv("metadata/metadata_parsed_100.tsv", sep = "\t", check.names = F, header = T)
+partitions <- read.csv("train_outputs/non_model/partitions.tsv", sep = "\t", check.names = F, header = T)
+metadata <- metadata[metadata$ID %in% partitions$ID,]
 
 # Read encodings
 encodings <- read.csv("metadata/encodings_100.tsv", sep = "\t", header = T)
