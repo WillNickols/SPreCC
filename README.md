@@ -265,13 +265,6 @@ Because the model is mostly dependent on similar proteins for all its prediction
 
 As expected, in the presence/absence and classification models, the model parameters updated to give larger weights to amino acid sequences that were more similar to the target sequence (Figure 1).  The fit parameters for predicting the optimal crystallization technique show an extreme version of this: sequences with 90% similarity to the target sequence are weighted approximately 20 times as heavily as sequences with 50% similarity to the target sequence.  A slight correlation was observed between how often a chemical was used and the magnitudes of its fit parameters, but this was largely driven by a few very common conditions with large fit parameters.  In the concentration and polymer length prediction models, the bandwidths shrink with increasing sequence similarity as expected: predictive distributions should be narrower around more similar, more informative sequences.  Increasing regularization of the parameters leads to more uniform weights as expected, and almost no correlation is observed between the magnitudes of a chemical's parameters and how often that chemical was used.
 
-
-
-Because 
-
-
-n_p, weights
-
 ### Presence/absence evaluation
 
 ### Concentration evaluation
