@@ -296,7 +296,7 @@ In keeping with [other attempts](https://mlcb.github.io/mlcb2019_proceedings/pap
 We next assessed the ability of the model to predict continuous values, specifically the concentration of each chemical condition, the length of a polymer, the pH, and the temperature.  Of the mean, median, and mode of the predicted density function, the mode was the best predictor of the actual variable's value by a slight margin.  For almost all variables, the model was able to predict within 1 standard deviation of the true value on average.  For example, when predicting pH, all models regardless of whether they were predicting on the train or validation set produced density functions with modes less than 1 pH unit away from the reported pH on average, even when including predictions on proteins with no similar proteins available.  However, as expected, the model's predictions did become slightly less precise when predicting on proteins with no similar proteins available.
 
 <p align="center">
- <img src="Figures/abs_err/mode_abs_err.png" width="1000" height="500">
+ <img src="Figures/volcano/mode.png" width="1000" height="500">
     <br>
     <em>Figure 6: Volcano plot for the slope of the linear relationship between the true concentration, polymer length, pH, or temperature and the mode of the predicted density function.  A linear model was fit for each continuous variable, and the value and p-value of the slope are reported.  The horizontal red line shows p=0.05, and the vertical red line shows a fit coefficient of 0.  No multiple testing correction was performed.  </em>
 </p>
