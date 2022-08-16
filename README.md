@@ -309,9 +309,17 @@ To evaluate how the model's predicted continuous values changed in response to c
     <em>Figure 7: Proportion of true values falling within the predicted density interval for continuous one- and two-parameter models.  Red lines mark 0.75 and 0.9. Predictions were only included for analysis if the true value of the variable was non-zero.</em>
 </p>
 
-To provide a range of plausible 
+To provide a range of plausible values for chemical concentrations, polymer lengths, the pH, and the temperature, the model can take a user specified density interval and return the bounds associated with that interval.  More specifically, given a desired density level $r\in[0,1]$, the model reports the $(0.5-r/2)$<sup>th</sup> and $(0.5+r/2)$<sup>th</sup> percentiles of the fit density function.  Notably, as indicated in Figure 7, these intervals should not be interpreted as well-calibrated confidence intervals.  For most chemicals and for pH and temperature, the probability that the true value will will be captured by an interval with level $r$ is considerably greater than $r$, even in the test set of Model 1, the model with the narrowest intervals.  However, for some variables, the probability of the density interval capturing the true value was much less than $r$.  In particular, the model was usually unable to simultaneously capture the concentration and polymer length of methoxy polyethylene glycol (mPEG) (61.2% and 27.9% success rates for Model 1's 75% interval train and test respectively) and the concentration and polymer length of polyethylene glycol monomethyl ether (PEG MME) (53.7% and 28.5% success rates for Model 1's 75% interval train and test respectively), though it was able to simultaneously capture the concentration and polymer length of PEG (87.9% and 84.2% success rates for Model 1's 75% interval train and test respectively).
 
-Density interval
+<p align="center">
+ <img src="Figures/density_interval/density_interval.png" width="800" height="400">
+    <br>
+    <em>Figure 8: Widths of density intervals.  The results are reported in multiples of the variable's standard deviation for comparison.  Predictions were only included for analysis if the true value of the variable was non-zero.</em>
+</p>
+
+To assess whether the the density intervals reported were sufficiently narrow to be useful, we calculated the average interval width normalized to the variable's standard deviation to ease comparisons.  Model 1, the most specific model, was able to generate density intervals of less than 2 standard deviations for 76% of variables.  For example, at the 75% density interval level, Model 1 produced pH prediction intervals with average widths of 2.68, capturing the true pH value 74% of the time.  Predictions of the PEG concentration were the least precise with average intervals of over 3 standard deviations in every model's 75% density interval and intervals of over 4 standard deviations in every model's 90% interval.
+
+(Peg concentration and length most variable)
 
 ## Authors and Acknowledgements
 This project was envisioned, planned, and implemented by Will Nickols, Ben Tang, Jorge Guerra, Srihari Ganesh, and Andrew Lu.  The computations were run in part on the FASRC Cannon cluster supported by the FAS Division of Science Research Computing Group at Harvard University.  We would additionally like to thank the Curtis Huttenhower lab and the Long Nguyen lab at the Harvard School of Public Health for their computing resources.  The content and any mistakes herein are solely the responsibility of W. Nickols, B. Tang, J. Guerra, S. Ganesh, and A. Lu and do not necessarily reflect the views of the Huttenhower or Nguyen labs.
