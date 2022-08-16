@@ -12,6 +12,10 @@ colnames(metadata) <- c('ID', 'date', 'crystal_id', 'details', 'method', 'p_h', 
 metadata <- metadata[,c(1, 2, 7, 3, 4, 5, 6, 8, 9, 10)]
 metadata[metadata==""] <- NA_character_
 
+partitions <- read.table("train_outputs/non_model/partitions.tsv", 
+                         header = T, sep = "\t", check.names = F)
+metadata <- metadata[metadata$ID %in% partitions$ID,]
+
 # Remove crystal_id because it is not relevant metadata
 metadata$crystal_id <- NULL
 
@@ -25,8 +29,8 @@ metadata$temp_details <- NULL
 # Standardize "method" #
 ########################
 
-# Of the 140731 entries with "method," the top entries for "method" account for 140015 (99.5%) of entries
-# Each of these will be regrouped if possible and everything else will be left to an "other" category
+# 116713 entries with "method"
+# These will be regrouped if possible and everything else will be left to an "other" category
 
 metadata <- metadata %>% mutate(
   method = method %>% tolower()) %>% mutate(
@@ -73,6 +77,8 @@ metadata <- metadata %>% mutate(
                        method == "sitting drop, vapor diffusion" ~ "vapor diffusion",
                        method == "counter diffusion" ~ "counter diffusion",
                        method == "lipidic cubic phase (lcp)" ~ "lipidic cubic phase",
+                       method == "lipid cubic phase" ~ "lipidic cubic phase",
+                       method == "oil-micro batch" ~ "batch",
                        method == "microseeding" ~ "seeding",
                        method == "macroseeding" ~ "seeding",
                        method == "soaking" ~ "soaking",
@@ -96,7 +102,7 @@ metadata <- metadata %>% mutate(
                        TRUE ~ "other")
   )
 
-# 237 other remaining, 140494 of 140731 (99.8%) classified
+# 184 other remaining, 116529 of 116713 (99.8%) classified
 
 #####################
 # Standardize "p_h" #
@@ -134,7 +140,7 @@ metadata$p_h[!is.na(tmp1)] = case_when(replacement < 2 ~ metadata$p_h[!is.na(tmp
 
 metadata$pdbx_phrange <- NULL
 
-# 129233 had pH before, 130867 have pH after (1.2% improvement)
+# 106220 had pH before, 107615 have pH after (1.3% improvement)
 
 ###############################
 # Extract chemical conditions #
@@ -142,10 +148,10 @@ metadata$pdbx_phrange <- NULL
 
 stored_pdbx_details = metadata$pdbx_details
 
-# 134372 initially have conditions
+# 115254 initially have conditions
 
 # NA pdbx_details with no numerics or with conditions in a problematic order
-# 127389 (94.8%) remain
+# 109194 (94.7%) remain
 metadata$pdbx_details <- ifelse(grepl("[0-9]", metadata$pdbx_details, perl = T), 
                                 ifelse(grepl(pattern = "^[0-9]", metadata$pdbx_details, perl = T), metadata$pdbx_details, NA), NA)
 
@@ -302,7 +308,7 @@ metadata = metadata %>%
       gsub(pattern = "([0-9])NA", replacement = "\\1")
   )
 
-# If p_h is NA and the details have a pH, use that (salvages 6777 (5.2%) pH values)
+# If p_h is NA and the details have a pH, use that (salvages 5911 (5.5%) pH values)
 ph_replacement = ifelse(grepl(".*ph([0-9\\.]+).*", metadata$pdbx_details), gsub(".*ph([0-9\\.]+).*", "\\1", metadata$pdbx_details), NA) %>% as.numeric()
 metadata$p_h <- case_when(ph_replacement > 14 | ph_replacement < -2 ~ metadata$p_h,
                           is.na(metadata$p_h) ~ ph_replacement,
@@ -311,15 +317,15 @@ metadata$pdbx_details = metadata$pdbx_details %>%
   gsub(pattern=" ph[0-9][0-9\\.\\-]*[,]*", replacement = " ", perl = TRUE) %>%
   gsub(pattern="^ph[0-9][0-9\\.\\-]*[,]*", replacement = " ", perl = TRUE)
 
-# 127388 (94.8% of the original) are non-NA after the initial text cleaning
+# 109193 (94.7% of the original) are non-NA after the initial text cleaning
 
 # Begin processing each condition
 
 # NA pdbx_details with no numerics
-# 120933 (90.0%) remain
+# 103781 (90.0%) remain
 metadata$pdbx_details <- ifelse(grepl("\\s+(?=[0-9\\.]* )", metadata$pdbx_details, perl = T), metadata$pdbx_details, NA)
 
-# 429102 conditions present
+# 363185 conditions present
 conditions_list = metadata$pdbx_details %>% str_split("\\s+(?=[0-9\\.]* )")
 
 # Remove conditions with no number (can't determine concentration)
@@ -329,7 +335,7 @@ remove_non_numeric <- function(x) {
 
 conditions_list <- lapply(conditions_list, remove_non_numeric)
 
-# 389088 (90.7%) conditions remain after removing non-numeric
+# 333287 (91.8%) conditions remain after removing non-numeric
 
 # Remove conditions with no units (or only units but no condition)
 units_vec <- c(" % w\\/w", "% w\\/v", "% v\\/v", "w\\/w", "w\\/v", "v\\/v", "\\/v", "% \\/v", "%", "m", "mm", "mg", "mg\\/ml", "ul", "ml", "um", "nl ")
@@ -344,9 +350,9 @@ conditions_list <- lapply(conditions_list, remove_no_units)
 num_conditions_each = lapply(conditions_list, (function(x) length(x[!is.na(x)]))) %>% unlist() 
 
 metadata$pdbx_details <- ifelse(unlist(lapply(conditions_list, length))>0, metadata$pdbx_details, NA)
-# 120914 (90.0%) remain non-NA
+# 103762 (90.0%) remain non-NA
 
-# 382354 (89.1%) conditions remain after removing no units
+# 327376 (90.1%) conditions remain after removing no units
 
 # Function to extract conditions
 get_conditions <- function(x) {
@@ -391,7 +397,7 @@ conditions <- lapply(conditions_list, get_conditions) %>% lapply(FUN = process_c
 # List of conditions to possibly add
 pos_add <- names(conditions %>% unlist() %>% table() %>% sort(decreasing = T))
 names(pos_add) <- pos_add
-# 13013 terms to possibly add
+# 12754 terms to possibly add
 
 # Read renamed conditions from tsv and replace
 replacement_tmp <- read.table("metadata/renamed.tsv", sep = "\t", header = T)
@@ -579,7 +585,7 @@ metadata[is.na(metadata$pdbx_details),new_cols] <- NA_real_
 # Get encodings for each column; if the string ends with a number it is bicontinuous + binary
 bicont_cols <- unique(gsub("[0-9].*", "", colnames(metadata)[-(1:6)])[grepl("^peg[0-9][0-9]* \\(%\\)|^peg mme[0-9][0-9]* \\(%\\)|^mpeg[0-9][0-9]* \\(%\\)", colnames(metadata)[-(1:6)])])
 
-# Assumes only one PEG condition per sample; this is true in 97.5% of cases with any PEG
+# Assumes only one PEG condition per sample; this is true in about 97% of cases with any PEG
 combine_row <- function(x, col_names) {
   if (sum(is.na(x)) > 0) {
     return(NA_real_)
@@ -632,7 +638,7 @@ metadata$pdbx_details <- stored_pdbx_details
 write.table(metadata, "metadata/metadata_parsed_100.tsv", sep = "\t", row.names = F, quote=T)
 
 mean((num_full==num_conditions_each)[num_conditions_each!=0], na.rm = T)
-# 81645 (67.5% of possible) proteins with all their numeric crystallization conditions in the final table
+# 69823 (67.3% of possible) proteins with all their numeric crystallization conditions in the final table
 
 # Write encodings to a new file
 encodings <- data.frame(name=colnames(metadata), encoding=c(NA, NA, NA, "cat", "cont", "cont", 
