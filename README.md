@@ -250,7 +250,7 @@ The optimal crystallization condition prediction tool would be one which (1) acc
 Five models were considered in this evaluation.  Model 1, the least regularized model, uses the initializations described above with $\beta=0.001$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Model 2 uses the initializations described above with $\beta=0.01$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Model 3 uses the initializations described above with $\beta=0.1$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Models 1-3 were trained for 5 epochs.  The null model fixes all parameters at 0.001 (weights of exactly 0 give divide-by-zero errors) and prevents updating; this can also be viewed as the model that would result with very heavy regularization.  The untrained model uses the initializations described above and prevents updating.  Because the null model performs similarly to the rest of the models on presence/absence and classification tasks, we chose to not evaluate a range of regularization on the presence/absence and classification models.
 
 <p align="center">
- <img src="Figures/n_p/n_p_by_partition.png" width="1200" height="350">
+ <img src="Figures/n_p/n_p_by_partition.png" width="960" height="280">
     <br>
     <em>Figure 1: Number of proteins passing the Mash p-value threshold for similarity to the target sequence.</em>
 </p>
@@ -268,7 +268,7 @@ As expected, in the presence/absence and classification models, the model parame
 ### Presence/absence evaluation
 
 <p align="center">
- <img src="Figures/auc/auc.png" width="1200" height="600">
+ <img src="Figures/auc/auc.png" width="800" height="400">
     <br>
     <em>Figure 3: Areas Under the ROC Curves and F1 statistics for predicted probabilities of inclusion from the presence/absence models for all chemical conditions.  Thresholds are chosen for the presence/absence models by taking the F1-maximizing threshold from the train set for each condition.  The F1 statistic weighted by class abundance (equivalent to the accuracy) is also shown for the classification model on predicting the crystallization technique.  The results shown are from Model 1.</em>
 </p>
@@ -276,7 +276,7 @@ As expected, in the presence/absence and classification models, the model parame
 When predicting the presence or absence of a chemical condition, the predicted values of inclusion for each condition show considerable linear seperability.  Despite the presence/absence model's construction, the predicted value should not be taken as a probability; using a threshold of 0.5 for inclusion of a chemical condition dramatically reduces the model's recall and therefore F1 as very few inclusions are predicted.  Instead, choosing an F1-maximizing threshold based on the train data (usually between 0.2 and 0.3) produces much better precision, recall, and F1 on both the train and test sets.  This creates noticable overfitting to the train set, but it still improves the predictions of the test set.  Generating the AUC and F1 metrics only from proteins with other similar proteins in the train set shows that the metrics improve slightly with more similar proteins.  Interestingly, the metrics were very similar for all models, suggesting that the presence/absence values of similar proteins are much more important than the weights assigned to them.  (The metrics were so similar across models that we chose not to display them as well.)  Importantly, though the individual F1 statistics are rather poor, a chemical's F1 statistics is highly correlated with the frequency with which it is used.
 
 <p align="center">
- <img src="Figures/weighted_metrics/weighted_metrics.png" width="1200" height="600">
+ <img src="Figures/weighted_metrics/weighted_metrics.png" width="800" height="400">
     <br>
     <em>Figure 4: Overall F1, Precision, and Recall weighted by the frequency of a chemical's use.</em>
 </p>
