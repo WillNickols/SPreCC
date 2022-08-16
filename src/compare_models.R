@@ -72,7 +72,7 @@ models_from_weights <- function() {
                       color="red", size=8) + 
     theme_bw() + ylab("o(x)") + theme(legend.position = "none",
                                       text = element_text(size=25)) + 
-    labs(title="Model 1 continuous weights (B=0.001)")
+    labs(title="Model 1 bandwidths (B=0.001)")
 
   p3 <-
     ggplot() +
@@ -94,7 +94,7 @@ models_from_weights <- function() {
                       color="red", size=8) + 
     theme_bw() + ylab("o(x)") + theme(legend.position = "none",
                                       text = element_text(size=25)) + 
-    labs(title="Model 2 continuous weights (B=0.01)")
+    labs(title="Model 2 bandwidths (B=0.01)")
   
   p4 <-
     ggplot() +
@@ -116,7 +116,7 @@ models_from_weights <- function() {
                       color="red", size=8) + 
     theme_bw() + ylab("o(x)") + theme(legend.position = "none",
                                       text = element_text(size=25)) + 
-    labs(title="Model 3 continuous weights (B=0.1)")
+    labs(title="Model 3 bandwidths (B=0.1)")
   
   dir.create(file.path("Figures/weights/"), showWarnings = FALSE)
   png(file=paste0("Figures/weights/weights_by_model.png"), width = 2400, height = 800)
@@ -478,7 +478,6 @@ mean_abs_err <- function(){
     theme_bw() + 
     xlab("") +
     ylab("Standard Deviations") +
-    ggtitle("Absolute error in standard deviations") +
     facet_grid(~model) +
     scale_fill_discrete(breaks=levels(weighted_df$n_p),
                         labels=c(expression("Without " ~ n[p] ~ "= 0"), expression("With " ~ n[p] ~ "= 0"))) + 
@@ -528,7 +527,6 @@ median_abs_err <- function(){
     theme_bw() + 
     xlab("") +
     ylab("Standard Deviations") +
-    ggtitle("Absolute error in standard deviations") +
     facet_grid(~model) +
     scale_fill_discrete(breaks=levels(weighted_df$n_p),
                         labels=c(expression("Without " ~ n[p] ~ "= 0"), expression("With " ~ n[p] ~ "= 0"))) + 
@@ -578,7 +576,6 @@ mode_abs_err <- function(){
     theme_bw() + 
     xlab("") +
     ylab("Standard Deviations") +
-    ggtitle("Absolute error in standard deviations") +
     facet_grid(~model) +
     scale_fill_discrete(breaks=levels(weighted_df$n_p),
                         labels=c(expression("Without " ~ n[p] ~ "= 0"), expression("With " ~ n[p] ~ "= 0"))) + 
