@@ -290,7 +290,7 @@ In keeping with [other attempts](https://mlcb.github.io/mlcb2019_proceedings/pap
 <p align="center">
  <img src="Figures/abs_err/mode_abs_err.png" width="1000" height="500">
     <br>
-    <em>Figure 5: Absolute error between the mode of the predicted density function and the actual concentration, polymer length, pH, or temperature.  (The results are reported in multiples of the variable's standard deviation for comparison.)</em>
+    <em>Figure 5: Absolute error between the mode of the predicted density function and the actual concentration, polymer length, pH, or temperature.  The results are reported in multiples of the variable's standard deviation for comparison.  Predictions were only included for analysis if the true value of the variable was non-zero.  </em>
 </p>
 
 We next assessed the ability of the model to predict continuous values, specifically the concentration of each chemical condition, the length of a polymer, the pH, and the temperature.  Of the mean, median, and mode of the predicted density function, the mode was the best predictor of the actual variable's value by a slight margin.  For almost all variables, the model was able to predict within 1 standard deviation of the true value on average.  For example, when predicting pH, all models regardless of whether they were predicting on the train or validation set produced density functions with modes less than 1 pH unit away from the reported pH on average, even when including predictions on proteins with no similar proteins available.  However, as expected, the model's predictions did become slightly less precise when predicting on proteins with no similar proteins available.
@@ -298,10 +298,18 @@ We next assessed the ability of the model to predict continuous values, specific
 <p align="center">
  <img src="Figures/volcano/mode.png" width="1000" height="500">
     <br>
-    <em>Figure 6: Volcano plot for the slope of the linear relationship between the true concentration, polymer length, pH, or temperature and the mode of the predicted density function.  A linear model was fit for each continuous variable, and the value and p-value of the slope are reported.  The horizontal red line shows p=0.05, and the vertical red line shows a fit coefficient of 0.  No multiple testing correction was performed.  </em>
+    <em>Figure 6: Volcano plot for the slope of the linear relationship between the true concentration, polymer length, pH, or temperature and the mode of the predicted density function.  A linear model was fit for each continuous variable, and the value and p-value of the slope are reported.  The horizontal red line shows p=0.05, and the vertical red line shows a fit coefficient of 0.  No multiple testing correction was performed.  Predictions were only included for analysis if the true value of the variable was non-zero.  </em>
 </p>
 
 To evaluate how the model's predicted continuous values changed in response to changes in the true values, we fit a linear model with the formula $(\textrm{mode})\sim(\textrm{true value})$ for each continuous variable.  In this evaluation, a perfect model would produce a coefficient of 1, while a model producing modes that regressed towards the center of all values of the variable would have a coefficient between 0 and 1.  In general, the coefficients were considerably less than 1, indicating that the model was predicting values closer to the grand mean of each variable than it should have.  Importantly, all negative coefficients (variables on which the model was improperly predicting lower values as the true value increased) had very low significance, suggesting that they were mainly due to poor fits from little data.
+
+<p align="center">
+ <img src="Figures/density_interval/density_interval_vs_nominal.png" width="1000" height="500">
+    <br>
+    <em>Figure 7: Proportion of true values falling within the predicted density interval for continuous one- and two-parameter models.  Red lines mark 0.75 and 0.9. Predictions were only included for analysis if the true value of the variable was non-zero.</em>
+</p>
+
+To provide a range of plausible 
 
 Density interval
 
