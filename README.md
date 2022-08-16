@@ -247,6 +247,29 @@ The optimal crystallization condition prediction tool would be one which (1) acc
 
 ### Model evaluation
 
+Five models were considered in this evaluation.  Model 1, the least regularized model, uses the initializations described above with $\beta=0.001$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Model 2 uses the initializations described above with $\beta=0.01$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Model 3 uses the initializations described above with $\beta=0.1$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Models 1-3 were trained for 5 epochs.  The null model fixes all parameters at 0.001 (weights of exactly 0 give divide-by-zero errors) and prevents updating; this can also be viewed as the model that would result with very heavy regularization.  The untrained model uses the initializations described above and prevents updating.  Because the null model performs similarly to the rest of the models on presence/absence and classification tasks, we chose to not evaluate a range of regularization on the presence/absence and classification models.
+
+<p align="center">
+ <img src="Figures/n_p/n_p_by_partition.png" width="1200" height="350">
+    <br>
+    <em>Figure 1: Number of proteins passing the Mash p-value threshold for similarity to the target sequence.</em>
+</p>
+
+Because the model is mostly dependent on similar proteins for all its predictions, it is important that it has enough proteins in its database to predict on new proteins.  While the train set usually had more similar proteins per sequence evaluated and fewer sequences with no similar proteins than the test set, almost 80% of proteins in the test set still had at least one similar protein, and most had far more.  This suggests that in a significant majority of cases, the model will be able to generate more specific predictions than the overall means even on proteins that are entirely novel.
+
+<p align="center">
+ <img src="Figures/weights/weights_by_model.png" width="1200" height="400">
+    <br>
+    <em>Figure 2: Weighting curves from fit parameters.  Parameters typically adjusted to weight similar amino acids more heavily.  (Bandwidths are normalized to their conditions' standard deviations for comparison.)</em>
+</p>
+
+As expected, in the presence/absence and classification models, the model parameters updated to give larger weights to amino acid sequences that were more similar to the target sequence (Figure 1).  The fit parameters for predicting the optimal crystallization technique show an extreme version of this: sequences with 90% similarity to the target sequence are weighted approximately 20 times as heavily as sequences with 50% similarity to the target sequence.  A slight correlation was observed between how often a chemical was used and the magnitudes of its fit parameters, but this was largely driven by a few very common conditions with large fit parameters.  In the concentration and polymer length prediction models, the bandwidths shrink with increasing sequence similarity as expected: predictive distributions should be narrower around more similar, more informative sequences.  Increasing regularization of the parameters leads to more uniform weights as expected, and almost no correlation is observed between the magnitudes of a chemical's parameters and how often that chemical was used.
+
+
+
+Because 
+
+
 n_p, weights
 
 ### Presence/absence evaluation
