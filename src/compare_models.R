@@ -61,14 +61,14 @@ models_from_weights <- function() {
     p2 <- p2 + geom_function(fun = sigmoid, args = list(w_0 = model_list[[1]]$w_10_cont[i], 
                                                         w_1 = model_list[[1]]$w_11_cont[i]),
                              alpha=ifelse(model_list[[1]]$condition[i] %in% 
-                                            c("sodium acetate (m)", "temp", "bis tris methane (m)", "p_h"),
+                                            c("sodium acetate (m)", "temp", "p_h"),
                                           1, 0.2), 
                              color=ifelse(model_list[[1]]$condition[i] %in% 
-                                            c("sodium acetate (m)", "temp", "bis tris methane (m)", "p_h"),
+                                            c("sodium acetate (m)", "temp", "p_h"),
                                                      "red", "black"))
 
   }
-  p2 <- p2 + annotate("text", x=c(0.15,0.1,0.2,0.02), y=c(5.8,4.8, 2.2, 3.9), label= c("Sodium acetate (m)", "Temperature", "Bis tris methane (m)", "pH"),
+  p2 <- p2 + annotate("text", x=c(0.15,0.1,0.02), y=c(5.8,4.8,3.9), label= c("Sodium acetate (m)", "Temperature", "pH"),
                       color="red", size=8) + 
     theme_bw() + ylab("o(x)") + theme(legend.position = "none",
                                       text = element_text(size=25)) + 
@@ -83,14 +83,14 @@ models_from_weights <- function() {
     p3 <- p3 + geom_function(fun = sigmoid, args = list(w_0 = model_list[[2]]$w_10_cont[i], 
                                                         w_1 = model_list[[2]]$w_11_cont[i]),
                              alpha=ifelse(model_list[[2]]$condition[i] %in% 
-                                            c("sodium acetate (m)", "temp", "bis tris methane (m)", "p_h"),
+                                            c("sodium acetate (m)", "temp", "p_h"),
                                           1, 0.2), 
                              color=ifelse(model_list[[2]]$condition[i] %in% 
-                                            c("sodium acetate (m)", "temp", "bis tris methane (m)", "p_h"),
+                                            c("sodium acetate (m)", "temp", "p_h"),
                                           "red", "black"))
     
   }
-  p3 <- p3 + annotate("text", x=c(0.85, 0.1, 0.2, 0.04), y=c(1.2, 3.4, 2.15, 1.6), label= c("Sodium acetate (m)", "Temperature", "Bis tris methane (m)", "pH"),
+  p3 <- p3 + annotate("text", x=c(0.85, 0.1, 0.04), y=c(1.2, 3.4, 1.6), label= c("Sodium acetate (m)", "Temperature", "pH"),
                       color="red", size=8) + 
     theme_bw() + ylab("o(x)") + theme(legend.position = "none",
                                       text = element_text(size=25)) + 
@@ -105,14 +105,14 @@ models_from_weights <- function() {
     p4 <- p4 + geom_function(fun = sigmoid, args = list(w_0 = model_list[[3]]$w_10_cont[i], 
                                                         w_1 = model_list[[3]]$w_11_cont[i]),
                              alpha=ifelse(model_list[[3]]$condition[i] %in% 
-                                            c("sodium acetate (m)", "temp", "bis tris methane (m)", "p_h"),
+                                            c("sodium acetate (m)", "temp", "p_h"),
                                           1, 0.2), 
                              color=ifelse(model_list[[3]]$condition[i] %in% 
-                                            c("sodium acetate (m)", "temp", "bis tris methane (m)", "p_h"),
+                                            c("sodium acetate (m)", "temp", "p_h"),
                                           "red", "black"))
     
   }
-  p4 <- p4 + annotate("text", x=c(0.85, 0.1, 0.2, 0.3), y=c(1.2, 0.9, 1.7, 0.9), label= c("Sodium acetate (m)", "Temperature", "Bis tris methane (m)", "pH"),
+  p4 <- p4 + annotate("text", x=c(0.85, 0.1, 0.3), y=c(1.2, 0.9, 0.9), label= c("Sodium acetate (m)", "Temperature", "pH"),
                       color="red", size=8) + 
     theme_bw() + ylab("o(x)") + theme(legend.position = "none",
                                       text = element_text(size=25)) + 
