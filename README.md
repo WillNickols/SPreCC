@@ -275,7 +275,7 @@ We first evaluated the ability of the model to predict the presence or absence o
 
 In keeping with [other attempts](https://mlcb.github.io/mlcb2019_proceedings/papers/paper_3.pdf), we report the weighted precision, recall, and F1, which are calculated by determining each metric for each chemical condition and crystallization technique and taking the weighted average of each metric with weights corresponding to their frequency of use (Figure 4).  Because the precision, recall, and F1 are much better for common chemicals like PEG and common techniques like vapor diffusion than for uncommon chemicals and techniques, these metrics provide a considerably more optimistic view of the model than in Figure 3.  While these metrics are nominally inferior to the [one known other attempt](https://mlcb.github.io/mlcb2019_proceedings/papers/paper_3.pdf) at predicting presence/absence values for chemical conditions and techniques, we believe their randomized construction of train and test sets and apparent lack of experiment deduplication led to inflated performance metrics for their models, though it is not clear exactly how much inflation occurred.  As before, the metrics were very similar for all models, suggesting that the inclusion or exclusion of proteins is much more important than the weights assigned to them.  (As before, the metrics were so similar across models that we chose not to display them.)
 
-### Concentration evaluation
+### Continuous variable evaluation
 
 <p align="center">
  <img src="Figures/abs_err/mode_abs_err.png" width="800" height="400">
