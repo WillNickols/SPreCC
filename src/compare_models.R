@@ -90,7 +90,7 @@ models_from_weights <- function() {
                                           "red", "black"))
     
   }
-  p3 <- p3 + annotate("text", x=c(0.85, 0.1, 0.04), y=c(1.2, 3.4, 1.6), label= c("Sodium acetate (m)", "Temperature", "pH"),
+  p3 <- p3 + annotate("text", x=c(0.85, 0.1, 0), y=c(1.2, 3.4, 2.5), label= c("Sodium acetate (m)", "Temperature", "pH"),
                       color="red", size=8) + 
     theme_bw() + ylab("o(x)") + theme(legend.position = "none",
                                       text = element_text(size=25)) + 

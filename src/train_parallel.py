@@ -123,7 +123,7 @@ def train_parallel(IDs, n, new_alpha):
     global threads
     start_time = timeit.default_timer()
     input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs]
-    result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
+    result = subprocess.run(['mash dist -v ' + str(1-0.999**(1/n)) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
     print("Mash time: " + str(timeit.default_timer() - start_time))
 
     if result == "":
@@ -167,7 +167,7 @@ def evaluate_parallel(IDs_org, n, CI):
     global threads
     input_list = [in_dir + "train/" + ID + '.fasta' for ID in IDs_org]
     start_time = timeit.default_timer()
-    result = subprocess.run(['mash dist -v ' + str(1/n) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
+    result = subprocess.run(['mash dist -v ' + str(1-0.999**(1/n)) + ' ' + db_dir + 'combined_sketch.msh ' + ' '.join(input_list) + ' -p ' + str(threads)], stdout=subprocess.PIPE, shell=True).stdout.decode("utf-8")
     print("Mash time: " + str(timeit.default_timer() - start_time))
 
     if result == "":
