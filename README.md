@@ -198,9 +198,9 @@ However, we are actually interested in the integrals of these quantities, so app
 
 $$\begin{equation}
 \begin{aligned} 
-\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,0}} &= -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial w_{j,0}}d\hat{y_1}d\hat{y_2}+2\beta w_{j,0}\\   
-\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,1}} &=  -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial w_{j,1}}d\hat{y_1}d\hat{y_2}+2\beta w_{j,1}\\ 
-\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial c_j} &=  -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{f(\hat{y_1},\hat{y_2})}{\partial c_{j}}d\hat{y_1}d\hat{y_2}+2\beta (c_j-\eta_j)\\
+\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,0}} &= -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{\partial f(\hat{y_1},\hat{y_2})}{\partial w_{j,0}}d\hat{y_1}d\hat{y_2}+2\beta w_{j,0}\\   
+\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial w_{j,1}} &=  -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{\partial f(\hat{y_1},\hat{y_2})}{\partial w_{j,1}}d\hat{y_1}d\hat{y_2}+2\beta w_{j,1}\\ 
+\frac{\partial L((y_1,y_2), \mathbf{x}, \mathbf{s}, (\bar{x_1}, \bar{x_2}), (\eta_1,\eta_2), (\delta_1,\delta_2), \beta)}{\partial c_j} &=  -\int_{y_1(1-\delta)}^{y_1(1+\delta)}\int_{y_2(1-\delta)}^{y_2(1+\delta)}\frac{\partial f(\hat{y_1},\hat{y_2})}{\partial c_{j}}d\hat{y_1}d\hat{y_2}+2\beta (c_j-\eta_j)\\
 \end{aligned}
 \end{equation}$$
 
