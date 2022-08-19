@@ -3,7 +3,7 @@
 
 ## Overview
 
-Knowledge of the three-dimensional structure of a protein is important for understanding and influencing its biological functions.  The most common technique for determining the structure of a protein is X-ray crystallography, but obtaining high quality crystals for X-ray diffraction remains the bottleneck of this technique.  Predicting chemical conditions that would produce high quality crystals from the amino acid sequence of a protein would considerably speed this process.  Previous efforts have attempted to [determine the optimal pH for crystallization from a protein's pI](https://doi.org/10.1093%2Fbioinformatics%2Fbtv011), [predict a list of chemical conditions](https://mlcb.github.io/mlcb2019_proceedings/papers/paper_3.pdf) for crystallization from a protein's amino acid sequence, or [predict the crystallization outcome from a set of chemical conditions](https://doi.org/10.1016/S1047-8477(03)00050-9) on a small (single-protein) scale.  However, to our knowledge, no attempt has been made to predict the optimal technique, pH, temperature, chemical conditions, and concentrations of those chemical conditions all together solely from a protein's amino acid sequence.  Here, we present and evaluate SPreCC, a method of predicting categorical, continuous, and presence/absence information for crystallization experiments based on amino acid sequence similarity.
+Knowledge of the three-dimensional structure of a protein is important for understanding and influencing its biological functions.  The most common technique for determining the structure of a protein is X-ray crystallography, but obtaining high quality crystals for X-ray diffraction remains the bottleneck of this technique.  Predicting chemical conditions that would produce high quality crystals from the amino acid sequence of a protein would considerably speed up this process.  Previous efforts have attempted to [determine the optimal pH for crystallization from a protein's pI](https://doi.org/10.1093%2Fbioinformatics%2Fbtv011), [predict a list of chemical conditions](https://mlcb.github.io/mlcb2019_proceedings/papers/paper_3.pdf) for crystallization from a protein's amino acid sequence, or [predict the crystallization outcome from a set of chemical conditions](https://doi.org/10.1016/S1047-8477(03)00050-9) on a small (single-protein) scale.  However, to our knowledge, no attempt has been made to predict the optimal technique, pH, temperature, chemical conditions, and concentrations of those chemical conditions all together solely from a protein's amino acid sequence.  Here, we present and evaluate SPreCC, a method of predicting categorical, continuous, and presence/absence information for crystallization experiments based on amino acid sequence similarity.
 
 ## Table of Contents  
 * [Models](#models)
@@ -44,7 +44,9 @@ w_1&\leftarrow w_1-\alpha\frac{\partial L(\hat{y},y)}{\partial w_1}
 To achieve an initially plausible weight scheme, the following initializations will be used: $w_0=-1$, $w_1=3$.  The following plot shows the weights produced by these parameters over the range of possible sequence identities.
 
 <p align="center">
-<img src="images/binary.png" width="300" height="200">
+ <img src="images/binary.png" width="300" height="200">
+    <br>
+    <em>Plot 1: Initialization weights versus sequence identity for the presence/absence model.</em>
 </p>
 
 The learning rate will start as $\alpha=0.1$ and will decay by $1/((\textrm{number of proteins}) \cdot (\textrm{number of epochs}))$ after each update.  The Mash p-value threshold will be $\tau=1-(1-1/1000)^{1/\textrm{number of proteins}}\approx 10^{-8}$, a level chosen so that the probability of the target protein spuriously matching any protein in the database is less than 0.001.
@@ -113,7 +115,7 @@ $$\begin{align*}
 \frac{\partial h_i}{\partial c} &= \frac{h_i}{c}\\
 \end{align*}$$
 
-However, we are actually interested in the integrals of these quantities, so applying the Leibniz integral rule gives the following:
+However, we are actually interested in the integrals of these quantities, which are obtained with the Leibniz integral rule:
 
 $$\begin{equation}
 \begin{aligned} 
@@ -137,7 +139,7 @@ The partial derivative of the density function with respect to each parameter wi
 
 By linearity of expectation, the expectation of $f$ is simply $$\frac{1}{n_p+1}\bar{x}+\frac{n_p}{n_p+1}\frac{1}{n_p}\sum\limits_{i}x_i \textrm{ for } i \textrm{ such that } p_i<\tau$$
 
-Because we do not need extreme precision, the approximate mode of the distribution can be found by evaluating the probability density function (PDF) from $\min(\bar{x},\min(\{x_i|x_i\in\mathbf{x}\}))$ to $\max(\bar{x},\max(\{x_i|x_i\in\mathbf{x}\}))$ with a step size of the difference divided by 1,000 and recording the value of the variable at the maximum value of the PDF.  Because the density of an individual kernel input decreases on either side of its mean, the mode is guaranteed to be between these bounds.  Because numeric integration over a large sum of variables is computationally costly and we do not need extreme precision, we can find an estimated 95\% confidence interval from the 2.5<sup>th</sup> percentile to the 97.5<sup>th</sup> percentile of the kernel density by iterating from either end of the distribution.  For the 2.5<sup>th</sup> percentile, we begin iterating upwards from $\hat{y}=\max(\min(\textrm{value of the variable for all proteins in the database}),\min(\Phi^{-1}(0.025)\eta+\bar{x}, \{\min(\Phi^{-1}(0.025)h_i+x_i)|x_i\in\mathbf{x}\}))$ and taking steps of the same size as for the mode until 
+The mode of the distribution can be found by evaluating the probability density function (PDF) from $\min(\bar{x},\min(\{x_i|x_i\in\mathbf{x}\}))$ to $\max(\bar{x},\max(\{x_i|x_i\in\mathbf{x}\}))$ with a step size of the difference divided by 1,000 and recording the value of the variable at the maximum value of the PDF.  Because the density of an individual kernel input decreases on either side of its mean, the mode is guaranteed to be between these bounds.  Because numeric integration over a large sum of variables is computationally costly, we can find an estimated 95\% confidence interval from the 2.5<sup>th</sup> percentile to the 97.5<sup>th</sup> percentile of the kernel density by iterating from either end of the distribution.  For the 2.5<sup>th</sup> percentile, we begin iterating upwards from $\hat{y}=\max(\min(\textrm{value of the variable for all proteins in the database}),\min(\Phi^{-1}(0.025)\eta+\bar{x}, \{\min(\Phi^{-1}(0.025)h_i+x_i)|x_i\in\mathbf{x}\}))$ and taking steps of the same size as for the mode until 
 
 $$\frac{1}{n_p+1}\Phi\left(\frac{\hat{y}-\bar{x}}{\eta}\right)+\frac{n_p}{n_p+1}\cdot\frac{1}{n_p}\sum_{i}\Phi\left(\frac{\hat{y}-x_i}{h_i}\right) \geq 0.025$$
 
@@ -151,7 +153,9 @@ We then take the $\hat{y}$ before the current one (the last one where the expres
 To achieve an initially plausible bandwidth scheme, the following initializations will be used: $w_0=-1,$ $w_1=-2,$ $c=\eta$.  The following image shows the bandwidths produced by these parameters (with $\eta=1$) with more similar proteins having a lower bandwidth as expected.   
 
 <p align="center">
-<img src="images/continuous.png" width="300" height="200">
+ <img src="images/continuous.png" width="300" height="200">
+    <br>
+    <em>Plot 2: Initialization weights versus sequence identity for the continuous variable model.</em>
 </p>
 
 The learning rate will start as $\alpha=0.1$ and will decay by $1/((\textrm{number of proteins}) \cdot (\textrm{number of epochs}))$ after each update.  The Mash p-value threshold will be $\tau=1-(1-1/1000)^{1/\textrm{number of proteins}}\approx 10^{-8}$.
@@ -194,7 +198,7 @@ $$\begin{align*}
 \frac{\partial h_{j,i}}{\partial c_j} &= \frac{h_{j,i}}{c_j}\\
 \end{align*}$$
 
-However, we are actually interested in the integrals of these quantities, so applying the Leibniz integral rule gives the following:
+However, we are actually interested in the integrals of these quantities, which are obtained with the Leibniz integral rule:
 
 $$\begin{equation}
 \begin{aligned} 
@@ -218,8 +222,8 @@ The partial derivative of the density function with respect to each parameter wi
 
 By linearity of expectation, the expectation of $f$ is simply $$\frac{1}{n_p+1}\bar{x}+\frac{n_p}{n_p+1}\frac{1}{n_p}\sum\limits_{i}x_{i} \textrm{ for } i \textrm{ such that } p_i<\tau$$
 
-Because we do not need extreme precision, the approximate mode of the distribution can be found by evaluating the PDF from $\min(\bar{x},\min(\{x_{i}|x_{i}\in\mathbf{x}\}))$ to $\max(\bar{x},\max(\{x_{i}|x_{i}\in\mathbf{x}\}))$ with a step size of the difference divided by 1,000 and recording the value of the variable at the largest value of the PDF.  Here, $\textrm{min}$ indicates the element-wise minimum of the two-element vector (i.e. the minimum of $x_{j,i}$ over all $i$ for $j=1$ and $j=2$ separately).  Because the density of an individual kernel input decreases on all sides of its mean, the mode is guaranteed to be between these bounds. 
- Because numeric integration over a large sum of variables is computationally costly and we do not need extreme precision, we can use the marginal density for each of the two elements of the variable to find an estimated 95\% confidence interval from the 2.5<sup>th</sup> percentile to the 97.5<sup>th</sup> percentile as before.
+The mode of the distribution can be found by evaluating the PDF from $\min(\bar{x},\min(\{x_{i}|x_{i}\in\mathbf{x}\}))$ to $\max(\bar{x},\max(\{x_{i}|x_{i}\in\mathbf{x}\}))$ with a step size of the difference divided by 1,000 and recording the value of the variable at the largest value of the PDF.  Here, $\textrm{min}$ indicates the element-wise minimum of the two-element vector (i.e. the minimum of $x_{j,i}$ over all $i$ for $j=1$ and $j=2$ separately).  Because the density of an individual kernel input decreases on all sides of its mean, the mode is guaranteed to be between these bounds. 
+ Because numeric integration over a large sum of variables is computationally costly, we can use the marginal density for each of the two elements of the variable to find an estimated 95\% confidence interval from the 2.5<sup>th</sup> percentile to the 97.5<sup>th</sup> percentile as before.
 
 To achieve an initially plausible bandwidth scheme, the following initializations will be used for $j\in\{1,2\}$: $w_{j,0}=-1$, $w_{j,1}=-2, c_j=\eta_j$.  The learning rate will start as $\alpha=0.1$ and will decay by $1/((\textrm{number of proteins}) \cdot (\textrm{number of epochs}))$ after each update.  The Mash p-value threshold will be $\tau=1-(1-1/1000)^{1/\textrm{number of proteins}}\approx 10^{-8}$.
 
@@ -237,7 +241,7 @@ The optimal crystallization condition prediction tool would be one which (1) acc
 
 ### Model evaluation
 
-Five models were considered in this evaluation.  Model 1, the least regularized model, uses the initializations described above with $\beta=0.001$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Models 2 and 3 are identical to model 1 except for using $\beta=0.01$ and $\beta=0.1$ respectively for the parameters in any continuous models.  Models 1-3 were trained for 5 epochs.  The null model fixes all parameters at 0.001 (parameters of exactly 0 give divide-by-zero errors) and prevents updating to give equal weights regardless of sequence similarity.  This can be viewed as the model that would result with very heavy regularization.  The untrained model uses the initializations described above and prevents updating.  Because the null model performs similarly to the rest of the models on presence/absence and classification tasks, we chose to not evaluate a range of regularization on the presence/absence and classification models.
+Five regularization models were tested in this evaluation.  (Each of these models contained as many of the above presence/absence, classification, continuous, and 2-variable continuous models as necessary for its crystallization condition prediction.  From here on, "model" will generally refer to one of the five regularization models tested rather than to one of the four mathematical models described above, each of which can only predict one type of data anyway.)  Model 1, the least regularized model, uses the initializations described above with $\beta=0.001$ for parameters in any continuous model and $\beta=0$ for parameters in any presence/absence or classification model.  Models 2 and 3 are identical to model 1 except for using $\beta=0.01$ and $\beta=0.1$ respectively for the parameters in any continuous models.  Models 1-3 were trained for 5 epochs.  The null model fixes all parameters at 0.001 (parameters of exactly 0 give divide-by-zero errors) and prevents updating to give equal weights regardless of sequence similarity.  This can be viewed as the model that would result with very heavy regularization.  The untrained model uses the initializations described above and prevents updating.  Because the null model performs similarly to the rest of the models on presence/absence and classification tasks, we chose to not evaluate a range of regularization on the presence/absence and classification models.
 
 Train statistics were generated by obtaining, for each train protein, the predicted crystallization technique, the predicted presence/absence and concentration values for all chemical conditions, and the predicted polymer lengths when relevant using weights from the fit parameters and a protein bank of all proteins in the train set excluding the protein for evaluation.  Validation statistics were generated likewise except that the weights were generated from the fit parameters of the relevant model's train set, and the protein bank for evaluating similarity only contained proteins from the train set (i.e. validation proteins were not searched against each other).  Except when calculating the capture rates of density intervals, the concentration and polymer length of polymeric chemicals were treated as separate continuous variables for evaluation.
 
@@ -312,4 +316,4 @@ To assess whether the density intervals reported were sufficiently narrow to be 
 Predictions of the PEG concentration were the least precise with average intervals of over 3 standard deviations in every trained model's 75% density interval and intervals of over 4 standard deviations in every trained model's 90% interval.  This was likely due to the fact that the model was simultaneously attempting to predict a concentration and a polymer length for PEG.
 
 ## Authors and Acknowledgements
-This project was envisioned and planned by Will Nickols, Ben Tang, Jorge Guerra, Srihari Ganesh, and Andrew Lu.  Will Nickols additionally implemented the models and workflows.  The computations were run in part on the FASRC Cannon cluster supported by the FAS Division of Science Research Computing Group at Harvard University.  We would like to thank the Curtis Huttenhower lab at the Harvard School of Public Health for their computing resources.  The content and any mistakes herein are solely the responsibility of W. Nickols, B. Tang, J. Guerra, S. Ganesh, and A. Lu and do not necessarily reflect the views of the Huttenhower lab.
+This project was envisioned and planned by Will Nickols, Benjamin Tang, Jorge Guerra, Srihari Ganesh, and Andrew Lu.  Will Nickols additionally implemented the models and workflows.  The computations were run in part on the FASRC Cannon cluster supported by the FAS Division of Science Research Computing Group at Harvard University.  We would like to thank the Curtis Huttenhower lab at the Harvard School of Public Health for their computing resources.  The content and any mistakes herein are solely the responsibility of W. Nickols, B. Tang, J. Guerra, S. Ganesh, and A. Lu and do not necessarily reflect the views of the Huttenhower lab.
