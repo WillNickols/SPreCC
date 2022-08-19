@@ -155,7 +155,7 @@ To achieve an initially plausible bandwidth scheme, the following initialization
 <p align="center">
  <img src="images/continuous.png" width="300" height="200">
     <br>
-    <em>Plot 2: Initialization weights versus sequence identity for the continuous variable model.</em>
+    <em>Plot 2: Initialization bandwidths versus sequence identity for the continuous variable model.</em>
 </p>
 
 The learning rate will start as $\alpha=0.1$ and will decay by $1/((\textrm{number of proteins}) \cdot (\textrm{number of epochs}))$ after each update.  The Mash p-value threshold will be $\tau=1-(1-1/1000)^{1/\textrm{number of proteins}}\approx 10^{-8}$.
